@@ -22,18 +22,15 @@ var bot = new builder.UniversalBot(connector, [
 // Add root menu dialog
 bot.dialog('rootMenu', [
     function (session) {
-        builder.Prompts.choice(session, "Choose an option:", 'Flip A Coin|Roll Dice|Magic 8-Ball|Quit');
+        builder.Prompts.choice(session, "Choose an option:", 'English|Bahasa Melayu');
     },
     function (session, results) {
         switch (results.response.index) {
             case 0:
-                session.beginDialog('flipCoinDialog');
+                session.beginDialog('EnglishDialog');
                 break;
             case 1:
-                session.beginDialog('rollDiceDialog');
-                break;
-            case 2:
-                session.beginDialog('magicBallDialog');
+                session.beginDialog('BahasaDialog');
                 break;
             default:
                 session.endDialog();
@@ -45,6 +42,30 @@ bot.dialog('rootMenu', [
         session.replaceDialog('rootMenu');
     }
 ]).reloadAction('showMenu', null, { matches: /^(menu|back)/i });
+
+// Add root menu dialog
+bot.dialog('EnglishDialog', [
+    function (session) {
+        builder.Prompts.choice(session, "What would you like to do?", 'Check qouta balance|Talk to a person');
+    },
+    function (session, results) {
+        switch (results.response.index) {
+            case 0:
+		session.send("Your qouta balance is 10.9 GB");
+                break;
+            case 1:
+                session.send("Please wait while we connect you to a person.");
+                break;
+            default:
+                session.endDialog();
+                break;
+        }
+    },
+    function (session) {
+        // Reload menu
+        session.replaceDialog('rootMenu');
+    }
+])
 
 // Setup Restify Server
 var server = restify.createServer();
