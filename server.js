@@ -52,9 +52,11 @@ bot.dialog('EnglishDialog', [
         switch (results.response.index) {
             case 0:
 		session.send("Your qouta balance is 10.9 GB");
+                session.endDialog();
                 break;
             case 1:
                 session.send("Please wait while we connect you to a person.");
+                session.endDialog();
                 break;
             default:
                 session.endDialog();
@@ -66,6 +68,33 @@ bot.dialog('EnglishDialog', [
         session.replaceDialog('rootMenu');
     }
 ])
+
+// Add root menu dialog
+bot.dialog('BahasaDialog', [
+    function (session) {
+        builder.Prompts.choice(session, "Sila pilih keperluan anda?", 'Semak baki qouta|Cakap dengan orang');
+    },
+    function (session, results) {
+        switch (results.response.index) {
+            case 0:
+		session.send("Baki qouta ialah 10.9 GB");
+                session.endDialog();
+                break;
+            case 1:
+                session.send("Sila tunggu sementara kami menghubungkan anda kepada seseorang.");
+                session.endDialog();
+                break;
+            default:
+                session.endDialog();
+                break;
+        }
+    },
+    function (session) {
+        // Reload menu
+        session.replaceDialog('rootMenu');
+    }
+])
+
 
 // Setup Restify Server
 var server = restify.createServer();
