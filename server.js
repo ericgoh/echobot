@@ -62,10 +62,6 @@ bot.dialog('EnglishDialog', [
                 session.endDialog();
                 break;
         }
-    },
-    function (session) {
-        // Reload menu
-        session.replaceDialog('rootMenu');
     }
 ])
 
@@ -88,10 +84,6 @@ bot.dialog('BahasaDialog', [
                 session.endDialog();
                 break;
         }
-    },
-    function (session) {
-        // Reload menu
-        session.replaceDialog('rootMenu');
     }
 ])
 
