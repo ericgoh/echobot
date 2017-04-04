@@ -12,9 +12,12 @@ var connector = new builder.ChatConnector(botConnectorOptions);
 var bot = new builder.UniversalBot(connector);
 
 bot.dialog('/', function (session) {
-    
-    //respond with user's message
-    session.send("You said " + session.message.text);
+    if (session.message.text == "hi"){
+    	session.send("Hello, how can I help you today?");
+    }else{
+    	//respond with user's message
+    	session.send("You said " + session.message.text);
+    }
 });
 
 // Setup Restify Server
