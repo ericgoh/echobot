@@ -52,11 +52,11 @@ bot.dialog('EnglishDialog', [
         switch (results.response.index) {
             case 0:
 		session.send("Your qouta balance is 10.9 GB");
-                session.endDialog();
+                session.endConversation("Goodbye until next time...1");
                 break;
             case 1:
                 session.send("Please wait while we connect you to a person.");
-                session.endDialog();
+                session.endConversation("Goodbye until next time...2");
                 break;
             default:
                 session.endDialog();
@@ -74,11 +74,11 @@ bot.dialog('BahasaDialog', [
         switch (results.response.index) {
             case 0:
 		session.send("Baki qouta ialah 10.9 GB");
-                session.endDialog();
+                session.endConversation("Goodbye until next time...3");
                 break;
             case 1:
                 session.send("Sila tunggu sementara kami menghubungkan anda kepada seseorang.");
-                session.endDialog();
+                session.endConversation("Goodbye until next time...4");
                 break;
             default:
                 session.endDialog();
