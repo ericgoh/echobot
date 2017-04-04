@@ -9,16 +9,42 @@ var botConnectorOptions = {
 
 // Create bot
 var connector = new builder.ChatConnector(botConnectorOptions);
-var bot = new builder.UniversalBot(connector);
-
-bot.dialog('/', function (session) {
-    if (session.message.text == 'hi'){
-    	session.send('Hello, how can I help you today?');
-    }else{
-    	//respond with user's message
-    	session.send("You said " + session.message.text);
+var bot = new builder.UniversalBot(connector, [
+    function (session) {
+        session.send("Hello, how can I help you?");
+        session.beginDialog('rootMenu');
+    },
+    function (session, results) {
+        session.endConversation("Goodbye until next time...");
     }
-});
+]);
+
+// Add root menu dialog
+bot.dialog('rootMenu', [
+    function (session) {
+        builder.Prompts.choice(session, "Choose an option:", 'Flip A Coin|Roll Dice|Magic 8-Ball|Quit');
+    },
+    function (session, results) {
+        switch (results.response.index) {
+            case 0:
+                session.beginDialog('flipCoinDialog');
+                break;
+            case 1:
+                session.beginDialog('rollDiceDialog');
+                break;
+            case 2:
+                session.beginDialog('magicBallDialog');
+                break;
+            default:
+                session.endDialog();
+                break;
+        }
+    },
+    function (session) {
+        // Reload menu
+        session.replaceDialog('rootMenu');
+    }
+]).reloadAction('showMenu', null, { matches: /^(menu|back)/i });
 
 // Setup Restify Server
 var server = restify.createServer();
