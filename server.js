@@ -12,7 +12,9 @@ var connector = new builder.ChatConnector(botConnectorOptions);
 var bot = new builder.UniversalBot(connector);
 
 bot.dialog('/', function (session) {
-    
+    if (session.message.text == 'hi'){
+    	session.send("Hello, how can I help you today?");
+    }
     //respond with user's message
     session.send("You said " + session.message.text);
 });
