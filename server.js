@@ -46,7 +46,7 @@ bot.dialog('rootMenu', [
 // Add root menu dialog
 bot.dialog('EnglishDialog', [
     function (session) {
-        builder.Prompts.choice(session, "What would you like to do?", 'Check qouta balance|Topup Account|Talk to a person');
+        builder.Prompts.choice(session, "What would you like to do?", 'Check qouta balance|Latest Promo|Topup Account|Talk to a person');
     },
     function (session, results) {
         switch (results.response.index) {
@@ -57,9 +57,18 @@ bot.dialog('EnglishDialog', [
                 session.endConversation("Goodbye until next time...1");
                 break;
 	    case 1:
+			 var cards = getCardsAttachments();
+
+		    // create reply with Carousel AttachmentLayout
+		    var reply = new builder.Message(session)
+			.attachmentLayout(builder.AttachmentLayout.carousel)
+			.attachments(cards);
+
+    		session.send(reply);
+	    case 2:
                 session.beginDialog('TopupDialog');
                 break;
-            case 2:
+            case 3:
                 session.send("Please wait while we connect you to a person.");
                 session.endConversation("Goodbye until next time...2");
                 break;
@@ -116,6 +125,54 @@ bot.dialog('BahasaDialog', [
         }
     }
 ])
+
+function getCardsAttachments(session) {
+    return [
+        new builder.HeroCard(session)
+            .title('Azure Storage')
+            .subtitle('Offload the heavy lifting of data center management')
+            .text('Store and help protect your data. Get durable, highly available data storage across the globe and pay only for what you use.')
+            .images([
+                builder.CardImage.create(session, 'https://docs.microsoft.com/en-us/azure/storage/media/storage-introduction/storage-concepts.png')
+            ])
+            .buttons([
+                builder.CardAction.openUrl(session, 'https://azure.microsoft.com/en-us/services/storage/', 'Learn More')
+            ]),
+
+        new builder.ThumbnailCard(session)
+            .title('DocumentDB')
+            .subtitle('Blazing fast, planet-scale NoSQL')
+            .text('NoSQL service for highly available, globally distributed apps—take full advantage of SQL and JavaScript over document and key-value data without the hassles of on-premises or virtual machine-based cloud database options.')
+            .images([
+                builder.CardImage.create(session, 'https://docs.microsoft.com/en-us/azure/documentdb/media/documentdb-introduction/json-database-resources1.png')
+            ])
+            .buttons([
+                builder.CardAction.openUrl(session, 'https://azure.microsoft.com/en-us/services/documentdb/', 'Learn More')
+            ]),
+
+        new builder.HeroCard(session)
+            .title('Azure Functions')
+            .subtitle('Process events with a serverless code architecture')
+            .text('An event-based serverless compute experience to accelerate your development. It can scale based on demand and you pay only for the resources you consume.')
+            .images([
+                builder.CardImage.create(session, 'https://azurecomcdn.azureedge.net/cvt-5daae9212bb433ad0510fbfbff44121ac7c759adc284d7a43d60dbbf2358a07a/images/page/services/functions/01-develop.png')
+            ])
+            .buttons([
+                builder.CardAction.openUrl(session, 'https://azure.microsoft.com/en-us/services/functions/', 'Learn More')
+            ]),
+
+        new builder.ThumbnailCard(session)
+            .title('Cognitive Services')
+            .subtitle('Build powerful intelligence into your applications to enable natural and contextual interactions')
+            .text('Enable natural and contextual interaction with tools that augment users\' experiences using the power of machine-based intelligence. Tap into an ever-growing collection of powerful artificial intelligence algorithms for vision, speech, language, and knowledge.')
+            .images([
+                builder.CardImage.create(session, 'https://azurecomcdn.azureedge.net/cvt-68b530dac63f0ccae8466a2610289af04bdc67ee0bfbc2d5e526b8efd10af05a/images/page/services/cognitive-services/cognitive-services.png')
+            ])
+            .buttons([
+                builder.CardAction.openUrl(session, 'https://azure.microsoft.com/en-us/services/cognitive-services/', 'Learn More')
+            ])
+    ];
+}
 
 
 // Setup Restify Server
