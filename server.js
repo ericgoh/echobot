@@ -130,14 +130,14 @@ bot.dialog('BahasaDialog', [
 function getCardsAttachments(session) {
     return [
         new builder.HeroCard(session)
-            .title('Azure Storage')
-            .subtitle('Offload the heavy lifting of data center management')
-            .text('Store and help protect your data. Get durable, highly available data storage across the globe and pay only for what you use.')
+            .title('Huawei P10 Series')
+            .subtitle('All new Huawei P10 series')
+            .text('High quality calls with VoLTE on the new Huawei P10 series with Digi 4G Plus network. Get it with Digi Postpaid')
             .images([
-                builder.CardImage.create(session, 'https://docs.microsoft.com/en-us/azure/storage/media/storage-introduction/storage-concepts.png')
+                builder.CardImage.create(session, 'http://i.imgur.com/ODzFsPO.jpg')
             ])
             .buttons([
-                builder.CardAction.openUrl(session, 'https://azure.microsoft.com/en-us/services/storage/', 'Learn More')
+                builder.CardAction.openUrl(session, 'http://new.digi.com.my/smartphone/Huawei-P10?utm_source=facebook&utm_medium=cpc&utm_campaign=postpaid_device_huaweip10&utm_content=ppl_huaweip10_VoLTE_eng', 'Learn More')
             ]),
 
         new builder.ThumbnailCard(session)
