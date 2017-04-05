@@ -65,6 +65,7 @@ bot.dialog('EnglishDialog', [
 			.attachments(cards);
 
     		session.send(reply);
+		break;
 	    case 2:
                 session.beginDialog('TopupDialog');
                 break;
