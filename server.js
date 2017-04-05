@@ -46,7 +46,7 @@ bot.dialog('rootMenu', [
 // Add root menu dialog
 bot.dialog('EnglishDialog', [
     function (session) {
-        builder.Prompts.choice(session, "What would you like to do?", 'Check qouta balance|Talk to a person');
+        builder.Prompts.choice(session, "What would you like to do?", 'Check qouta balance|Topup Account|Talk to a person');
     },
     function (session, results) {
         switch (results.response.index) {
@@ -54,9 +54,35 @@ bot.dialog('EnglishDialog', [
 		session.send("Your qouta balance is 10.9 GB");
                 session.endConversation("Goodbye until next time...1");
                 break;
-            case 1:
+	    case 1:
+                session.beginDialog('TopupDialog');
+                break;
+            case 2:
                 session.send("Please wait while we connect you to a person.");
                 session.endConversation("Goodbye until next time...2");
+                break;
+            default:
+                session.endDialog();
+                break;
+        }
+    }
+])
+
+// Add root menu dialog
+bot.dialog('TopupDialog', [
+    function (session) {
+        builder.Prompts.choice(session, "Which topup do you want?", '8GB - 7 Days - RM10|10GB - 7 Days - RM12|20GB - 7 Days - RM20');
+    },
+    function (session, results) {
+        switch (results.response.index) {
+            case 0:
+                session.endConversation("You successfully topup 8GB - 7 Days - RM10");
+                break;
+	    case 1:
+                session.endConversation("You successfully topup 10GB - 7 Days - RM12");
+                break;
+            case 3:
+                session.endConversation("You successfully topup 20GB - 7 Days - RM20");
                 break;
             default:
                 session.endDialog();
