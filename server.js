@@ -51,6 +51,8 @@ bot.dialog('EnglishDialog', [
     function (session, results) {
         switch (results.response.index) {
             case 0:
+	 	//post https to get qouta balance
+		//provide me your msisdn + verification icno
 		session.send("Your qouta balance is 10.9 GB");
                 session.endConversation("Goodbye until next time...1");
                 break;
@@ -76,6 +78,8 @@ bot.dialog('TopupDialog', [
     function (session, results) {
         switch (results.response.index) {
             case 0:
+		//provide me your msisdn
+		//generate payment link 
                 session.endConversation("You successfully topup 8GB - 7 Days - RM10");
                 break;
 	    case 1:
