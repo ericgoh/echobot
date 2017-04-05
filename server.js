@@ -46,14 +46,14 @@ bot.dialog('rootMenu', [
 // Add root menu dialog
 bot.dialog('EnglishDialog', [
     function (session) {
-        builder.Prompts.choice(session, "What would you like to do?", 'Check qouta balance|Latest Promo|Topup Account|Talk to a person');
+        builder.Prompts.choice(session, "What would you like to do?", 'Check quota balance|Latest Promo|Topup Account|Talk to a person');
     },
     function (session, results) {
         switch (results.response.index) {
             case 0:
 	 	//post https to get qouta balance
 		//provide me your msisdn + verification icno
-		session.send("Your qouta balance is 10.9 GB");
+		session.send("Your quota balance is 10.9 GB");
                 session.endConversation("Goodbye until next time...1");
                 break;
 	    case 1:
@@ -113,7 +113,7 @@ bot.dialog('BahasaDialog', [
     function (session, results) {
         switch (results.response.index) {
             case 0:
-		session.send("Baki qouta ialah 10.9 GB");
+		session.send("Baki quota ialah 10.9 GB");
                 session.endConversation("Goodbye until next time...3");
                 break;
             case 1:
