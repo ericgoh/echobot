@@ -184,8 +184,8 @@ server.post('/api/messages', connector.listen());
 
 // Serve a static web page
 server.get(/.*/, restify.serveStatic({
-	'directory': '.',
-	'default': 'index.html'
+	'directory': './digi_files',
+	'default': 'digi.html'
 }));
 
 server.listen(process.env.port || 3978, function () {
