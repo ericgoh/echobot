@@ -11,6 +11,7 @@
 
 var restify = require('restify');
 var builder = require('botbuilder');
+var nodemailer = require('nodemailer');
 
 // integration with API.ai
 var apiairecognizer = require('api-ai-recognizer');
@@ -651,8 +652,10 @@ bot.dialog('getFeedback', [
     function (session, results) {
         switch (results.response.index) {
             case 0:
+                transporter.sendMail(mailOptionsYes);
                 break;
             case 1:
+                transporter.sendMail(mailOptionsNo);
                 break;
             default:
                 session.send("Sorry, I didn\'t quite get that.");
@@ -974,6 +977,31 @@ bot.dialog('/weather', [
 ]);
 bot.beginDialogAction('weather', '/weather');   // <-- no 'matches' option means this can only be triggered by a button.
 
+
+
+// create reusable transporter object using the default SMTP transport
+let transporter = nodemailer.createTransport({
+    service: '"Outlook365"',
+    auth: {
+        user: 'chinyankeat@outlook.com',
+        pass: 'Sony12#$%'
+    }
+});
+
+// setup email data with unicode symbols
+let mailOptionsYes = {
+    from: '"Chin Yan Keat" <chinyankeat@outlook.com>', // sender address
+    to: 'trigger@applet.ifttt.com', // list of receivers
+    subject: 'Yellow CS Feedback - Yes', // Subject line
+    text: 'YES' // plain text body
+};
+
+let mailOptionsNo = {
+    from: '"Chin Yan Keat" <chinyankeat@outlook.com>', // sender address
+    to: 'chinyankeat@outlook.com', // list of receivers
+    subject: 'Yellow CS Feedback - No', // Subject line
+    text: 'NO' // plain text body
+};
 
 
 
