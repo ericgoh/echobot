@@ -1,3 +1,14 @@
+////////////////////////////////////////////////////////////
+// Start: To setup the script, Install these packages
+// 
+// npm install --save botbuilder 
+// npm install --save restify
+// npm install --save api-ai-recognizer
+// npm install --save nodemailer 
+//
+////////////////////////////////////////////////////////////
+
+
 var restify = require('restify');
 var builder = require('botbuilder');
 
@@ -26,7 +37,8 @@ var bot = new builder.UniversalBot(connector, [
 // R.1 - rootMenu |
 bot.dialog('rootMenu', [
     function (session) {
-        builder.Prompts.choice(session, "Just pick any of the items below to begin", 'Prepaid|Postpaid|Broadband|Roaming|Download MyDigi|FAQ|Reference');
+
+        builder.Prompts.choice(session, "Just pick any of the items below to begin", 'Prepaid|Postpaid|Broadband|Roaming|Download MyDigi|FAQ|Reference|Feedback', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         switch (results.response.index) {
@@ -47,10 +59,11 @@ bot.dialog('rootMenu', [
             case 6:
                 session.beginDialog('/ref');
                 break;
+            case 7:
+                session.beginDialog('getFeedback');
+                break;
             default:
                 session.send("Sorry, I didn't quite get that.");
-                session.send("Just pick any of the items below to begin", 'Prepaid|Postpaid|Broadband|Roaming|Download MyDigi|My Account');
-                session.endDialog();
                 break;
         }
     },
@@ -63,7 +76,7 @@ bot.dialog('rootMenu', [
 // R.1 - rootMenu | PrepaidDialog
 bot.dialog('PrepaidDialog', [
     function (session) {
-        builder.Prompts.choice(session, "Here are some things that I can help you with", 'Plan Recommendation|Prepaid Plans|Promotions|Internet Plans|My Account');
+        builder.Prompts.choice(session, "Here are some things that I can help you with", 'Plan Recommendation|Prepaid Plans|Promotions|Internet Plans|My Account', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         switch (results.response.index) {
@@ -82,6 +95,8 @@ bot.dialog('PrepaidDialog', [
             break;
         default:
             session.send("Sorry, I don't quite get that");
+            session.endDialog();
+            session.beginDialog('MyAccountPrepaid');
             break;
         }
     },
@@ -95,7 +110,7 @@ bot.dialog('PrepaidDialog', [
 // R.0.0 - rootMenu | PrepaidDialog | PrepaidRecommendationQ1 
 bot.dialog('PrepaidRecommendationQ1', [
     function (session) {
-        builder.Prompts.choice(session, "Do you use a lot of voice calls?", 'Yes|No');
+        builder.Prompts.choice(session, "Do you use a lot of voice calls?", 'Yes|No', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         switch (results.response.index) {
@@ -104,7 +119,7 @@ bot.dialog('PrepaidRecommendationQ1', [
             session.beginDialog('PrepaidRecommendationQ2');
             break;
         default:
-            session.endDialog();
+    		session.send('Sorry, I don\'t quite understand that');
             break;
         }
     },
@@ -117,7 +132,7 @@ bot.dialog('PrepaidRecommendationQ1', [
 // R.0.0.1 - rootMenu | PrepaidDialog | PrepaidRecommendationQ1 | PrepaidRecommendationQ2
 bot.dialog('PrepaidRecommendationQ2', [
     function (session) {
-        builder.Prompts.choice(session, "I see.  What do you usually use your data for?", 'Social Media|Music/Videos|Data is Life!|I don\'t really use data');
+        builder.Prompts.choice(session, "I see.  What do you usually use your data for?", 'Social Media|Music/Videos|Data is Life!|I don\'t really use data', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         switch (results.response.index) {
@@ -128,9 +143,10 @@ bot.dialog('PrepaidRecommendationQ2', [
             var cards = getCardsBestPrepaid();
 		    var reply = new builder.Message(session).attachmentLayout(builder.AttachmentLayout.carousel).attachments(cards);
     		session.send(reply);
+            session.beginDialog('getFeedback');
             break;
         default:
-            session.endDialog();
+    		session.send('Sorry, I don\'t quite understand that');
             break;
         }
     },
@@ -186,7 +202,7 @@ function getCardsPrepaidPlan(session) {
 bot.dialog('MyAccountPrepaid', [
     function (session) {
         session.send("Just let us verify your identity for a sec ");
-        builder.Prompts.choice(session, "You may choose \"One Time Code\" to get a verification code sent to your phone or you can sign in via \"Connect ID\"", 'One Time Code|Connect ID');
+        builder.Prompts.choice(session, "You may choose \"One Time Code\" to get a verification code sent to your phone or you can sign in via \"Connect ID\"", 'One Time Code|Connect ID', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         switch (results.response.index) {
@@ -226,7 +242,7 @@ bot.dialog('OneTimeCode', [
 // R.0.4.1.1 - rootMenu | PrepaidDialog  | MyAccountPrepaid | OneTimeCode | PrepaidAccountOverview
 bot.dialog('PrepaidAccountOverview', [
     function (session) {
-        builder.Prompts.choice(session, "What can we help you with?", 'Credit Balance|Internet Quota|Talktime Services|Itemized Usage|Reload|Add On');
+        builder.Prompts.choice(session, "What can we help you with?", 'Credit Balance|Internet Quota|Talktime Services|Itemized Usage|Reload|Add On', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         switch (results.response.index) {
@@ -250,7 +266,7 @@ bot.dialog('PrepaidAccountOverview', [
 // R.1 - rootMenu | PostpaidDialog
 bot.dialog('PostpaidDialog', [
     function (session) {
-        builder.Prompts.choice(session, "Here are some things that I can help you with", 'Postpaid Plans|Promotions|Internet Plans|My Account|FAQ');
+        builder.Prompts.choice(session, "Here are some things that I can help you with", 'Postpaid Plans|Promotions|Internet Plans|My Account|FAQ', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         switch (results.response.index) {
@@ -279,7 +295,7 @@ bot.dialog('PostpaidDialog', [
 // R.5 - rootMenu | FAQDialog
 bot.dialog('FaqDialog', [
     function (session) {
-        builder.Prompts.choice(session, "Soemthing to begin with", 'General|Postpaid|Broadband|Prepaid|Roaming');
+        builder.Prompts.choice(session, "Soemthing to begin with", 'General|Postpaid|Broadband|Prepaid|Roaming', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         switch (results.response.index) {
@@ -626,6 +642,26 @@ function getCardsPostpaidPlan(session) {
     ];
 }
 
+
+// R.5.3 - rootMenu | FAQDialog | Prepaid
+bot.dialog('getFeedback', [
+    function (session) {
+        builder.Prompts.choice(session, "We would appreciate your feedback\n Do you find our Virtual Assistant userful? ", 'Yes|No', { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        switch (results.response.index) {
+            case 0:
+                break;
+            case 1:
+                break;
+            default:
+                session.send("Sorry, I didn\'t quite get that.");
+                break;
+        }
+        session.send('Thank you for your feedback');
+        session.replaceDialog('rootMenu');
+    }
+])
 
 
 //////////////////////////////////////////////////////////////////////////////
