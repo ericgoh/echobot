@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/fuselabs/echobot#readme",
   "dependencies": {
+    "api-ai-recognizer": "^1.0.2",
     "botbuilder": "^3.7.0",
     "restify": "^4.3.0"
   }
