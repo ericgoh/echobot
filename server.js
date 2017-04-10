@@ -8,7 +8,7 @@
 //
 ////////////////////////////////////////////////////////////
 
-require('dotenv-extended').load();
+//require('dotenv-extended').load();
 
 var restify = require('restify');
 var builder = require('botbuilder');
