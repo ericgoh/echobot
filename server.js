@@ -3,19 +3,25 @@
 // 
 // npm install --save botbuilder 
 // npm install --save restify
-// npm install --save api-ai-recognizer
-// npm install --save nodemailer 
+// npm install --save applicationinsights 
+// npm install --save dotenv-extended   (RUN AS ADMIN)
 //
 ////////////////////////////////////////////////////////////
 
+require('dotenv-extended').load();
 
 var restify = require('restify');
 var builder = require('botbuilder');
-var nodemailer = require('nodemailer');
 
-// integration with API.ai
-var apiairecognizer = require('api-ai-recognizer');
-var recognizer = new apiairecognizer('5cf3fe4b33b14c269ee4c38929bd144f');
+
+// Setup for Application Insights
+var telemetryModule = require('./telemetry-module.js');
+
+var appInsights = require('applicationinsights');
+appInsights.setup(process.env.APPINSIGHTS_INSTRUMENTATIONKEY).start();
+//appInsights.setup("75f78141-cedd-4274-9ef5-f206b617d998").start();
+var appInsightsClient = appInsights.getClient();
+
 
 // Get secrets from server environment
 var botConnectorOptions = { 
@@ -23,20 +29,43 @@ var botConnectorOptions = {
     appPassword: process.env.BOTFRAMEWORK_APPSECRET
 };
 
+
 // Create bot
 var connector = new builder.ChatConnector(botConnectorOptions);
 var bot = new builder.UniversalBot(connector, [
+
     function (session) {
-        session.send("Hello, I'm D'bot, the Friendly Digi bot! %s");
-        session.beginDialog('rootMenu');
+        var telemetry = telemetryModule.createTelemetry(session, { setDefault: false });
+
+        // Start tracking
+        appInsightsClient.trackTrace('start', telemetry);
+        
+        
+        session.send("Hello, I'm Yellow Man, the Friendly Digi bot!");
+        session.send("Enter HELP or MENU at any place to come back to main menu");
+        session.beginDialog('menu');
     },
+
     function (session, results) {
         session.endConversation("Goodbye until next time...");
     }
 ]);
 
-// R.1 - rootMenu |
-bot.dialog('rootMenu', [
+
+// Send welcome when conversation with bot is started, by initiating the root dialog
+bot.on('conversationUpdate', function (message) {
+    if (message.membersAdded) {
+        message.membersAdded.forEach(function (identity) {
+            if (identity.id === message.address.bot.id) {
+                bot.beginDialog(message.address, 'menu');
+            }
+        });
+    }
+});
+
+
+// R.1 - menu |
+bot.dialog('menu', [
     function (session) {
 
         builder.Prompts.choice(session, "Just pick any of the items below to begin", 'Prepaid|Postpaid|Broadband|Roaming|Download MyDigi|FAQ|Reference|Feedback', { listStyle: builder.ListStyle.button });
@@ -70,15 +99,22 @@ bot.dialog('rootMenu', [
     },
     function (session) {
         // Reload menu
-        session.replaceDialog('rootMenu');
+        session.replaceDialog('menu');
     }
-]).reloadAction('showMenu', null, { matches: /^(menu|back)/i });
+]).triggerAction({
+    matches: /^(menu)|(exit)|(quit)|(depart)|(bye)|(goodbye)|(begin)/i
+});
 
-// R.1 - rootMenu | PrepaidDialog
+// R.1 - menu | PrepaidDialog
 bot.dialog('PrepaidDialog', [
     function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('Main|Prepaid', telemetry);
+        
         builder.Prompts.choice(session, "Here are some things that I can help you with", 'Plan Recommendation|Prepaid Plans|Promotions|Internet Plans|My Account', { listStyle: builder.ListStyle.button });
     },
+
+    
     function (session, results) {
         switch (results.response.index) {
         case 0:
@@ -103,14 +139,17 @@ bot.dialog('PrepaidDialog', [
     },
     function (session) {
         // Reload menu
-        session.replaceDialog('rootMenu');
+        session.replaceDialog('menu');
     }
 ])
 
 
-// R.0.0 - rootMenu | PrepaidDialog | PrepaidRecommendationQ1 
+// R.0.0 - menu | PrepaidDialog | PrepaidRecommendationQ1 
 bot.dialog('PrepaidRecommendationQ1', [
     function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('Main|Prepaid|PrepaidRecommendationQ1', telemetry);
+        
         builder.Prompts.choice(session, "Do you use a lot of voice calls?", 'Yes|No', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
@@ -126,13 +165,16 @@ bot.dialog('PrepaidRecommendationQ1', [
     },
     function (session) {
         // Reload menu
-        session.replaceDialog('rootMenu');
+        session.replaceDialog('menu');
     }
 ])
 
-// R.0.0.1 - rootMenu | PrepaidDialog | PrepaidRecommendationQ1 | PrepaidRecommendationQ2
+// R.0.0.1 - menu | PrepaidDialog | PrepaidRecommendationQ1 | PrepaidRecommendationQ2
 bot.dialog('PrepaidRecommendationQ2', [
     function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('Main|Prepaid|PrepaidRecommendationQ2', telemetry);
+
         builder.Prompts.choice(session, "I see.  What do you usually use your data for?", 'Social Media|Music/Videos|Data is Life!|I don\'t really use data', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
@@ -153,11 +195,11 @@ bot.dialog('PrepaidRecommendationQ2', [
     },
     function (session) {
         // Reload menu
-        session.replaceDialog('rootMenu');
+        session.replaceDialog('menu');
     }
 ])
 
-// R.0.0.1.1 - rootMenu | PrepaidDialog | PrepaidRecommendationQ1 | PrepaidRecommendationQ2 | getCardsBestPrepaid
+// R.0.0.1.1 - menu | PrepaidDialog | PrepaidRecommendationQ1 | PrepaidRecommendationQ2 | getCardsBestPrepaid
 function getCardsBestPrepaid(session) {
     return [
         new builder.HeroCard(session)
@@ -173,7 +215,7 @@ function getCardsBestPrepaid(session) {
     ];
 }
 
-// R.0.1 - rootMenu | PrepaidDialog | getCardsPrepaidPlan
+// R.0.1 - menu | PrepaidDialog | getCardsPrepaidPlan
 function getCardsPrepaidPlan(session) {
     return [
         new builder.HeroCard(session)
@@ -199,7 +241,7 @@ function getCardsPrepaidPlan(session) {
     ];
 }
 
-// R.0.4 - rootMenu | PrepaidDialog  | MyAccountPrepaid
+// R.0.4 - menu | PrepaidDialog  | MyAccountPrepaid
 bot.dialog('MyAccountPrepaid', [
     function (session) {
         session.send("Just let us verify your identity for a sec ");
@@ -220,11 +262,11 @@ bot.dialog('MyAccountPrepaid', [
     },
     function (session) {
         // Reload menu
-        session.replaceDialog('rootMenu');
+        session.replaceDialog('menu');
     }
 ])
 
-// R.1.4.1 - rootMenu | PrepaidDialog  | MyAccountPrepaid | OneTimeCode
+// R.1.4.1 - menu | PrepaidDialog  | MyAccountPrepaid | OneTimeCode
 bot.dialog('OneTimeCode', [
     function (session) {
         builder.Prompts.text(session, 'What is your phone number?');
@@ -240,7 +282,7 @@ bot.dialog('OneTimeCode', [
     }
 ])
 
-// R.0.4.1.1 - rootMenu | PrepaidDialog  | MyAccountPrepaid | OneTimeCode | PrepaidAccountOverview
+// R.0.4.1.1 - menu | PrepaidDialog  | MyAccountPrepaid | OneTimeCode | PrepaidAccountOverview
 bot.dialog('PrepaidAccountOverview', [
     function (session) {
         builder.Prompts.choice(session, "What can we help you with?", 'Credit Balance|Internet Quota|Talktime Services|Itemized Usage|Reload|Add On', { listStyle: builder.ListStyle.button });
@@ -264,9 +306,12 @@ bot.dialog('PrepaidAccountOverview', [
 ])
 
 
-// R.1 - rootMenu | PostpaidDialog
+// R.1 - menu | PostpaidDialog
 bot.dialog('PostpaidDialog', [
     function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('Main|Postpaid', telemetry);
+
         builder.Prompts.choice(session, "Here are some things that I can help you with", 'Postpaid Plans|Promotions|Internet Plans|My Account|FAQ', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
@@ -289,13 +334,16 @@ bot.dialog('PostpaidDialog', [
     },
     function (session) {
         // Reload menu
-        session.replaceDialog('rootMenu');
+        session.replaceDialog('menu');
     }
 ])
 
-// R.5 - rootMenu | FAQDialog
+// R.5 - menu | FAQDialog
 bot.dialog('FaqDialog', [
     function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('Main|FAQ', telemetry);
+
         builder.Prompts.choice(session, "Soemthing to begin with", 'General|Postpaid|Broadband|Prepaid|Roaming', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
@@ -323,19 +371,22 @@ bot.dialog('FaqDialog', [
     },
     function (session) {
         // Reload menu
-        session.replaceDialog('rootMenu');
+        session.replaceDialog('menu');
     }
 ])
 
-// R.5.0 - rootMenu | FAQDialog | FaqGeneral
+// R.5.0 - menu | FAQDialog | FaqGeneral
 bot.dialog('FaqGeneral', [
     function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('Main|FAQ|General', telemetry);
+
         var msg = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
                 new builder.ThumbnailCard(session)
                     .title("PDPA")
-                    .subtitle("PDPA – what is personal data protection act ?")
+                    .subtitle("PDPA â€“ what is personal data protection act ?")
                     .buttons([
                         builder.CardAction.imBack(session, "select:100", "Answer")
                     ]),
@@ -401,7 +452,7 @@ bot.dialog('FaqGeneral', [
                     ]),
                 new builder.ThumbnailCard(session)
                     .title("Call 1300")
-                    .subtitle("Why I’ve been charge calling 1300 number ?")
+                    .subtitle("Why Iâ€™ve been charge calling 1300 number ?")
                     .buttons([
                         builder.CardAction.imBack(session, "select:111", "Answer")
                     ]),
@@ -475,13 +526,16 @@ bot.dialog('FaqGeneral', [
     }, 
     function (session) {
         // Reload menu
-        session.replaceDialog('rootMenu');
+        session.replaceDialog('menu');
     }
 ])
 
-// R.5.1 - rootMenu | FAQDialog | FaqPostpaid
+// R.5.1 - menu | FAQDialog | FaqPostpaid
 bot.dialog('FaqPostpaid', [
     function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('Main|FAQ|Postpaid', telemetry);
+
         var msg = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
@@ -529,13 +583,16 @@ bot.dialog('FaqPostpaid', [
     }, 
     function (session) {
         // Reload menu
-        session.replaceDialog('rootMenu');
+        session.replaceDialog('menu');
     }
 ])
 
-// R.5.2 - rootMenu | FAQDialog | FaqBroadband
+// R.5.2 - menu | FAQDialog | FaqBroadband
 bot.dialog('FaqBroadband', [
     function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('Main|FAQ|Broadband', telemetry);
+        
         var msg = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
@@ -565,13 +622,16 @@ bot.dialog('FaqBroadband', [
     }, 
     function (session) {
         // Reload menu
-        session.replaceDialog('rootMenu');
+        session.replaceDialog('menu');
     }
 ])
 
-// R.5.3 - rootMenu | FAQDialog | Prepaid
+// R.5.3 - menu | FAQDialog | Prepaid
 bot.dialog('FaqPrepaid', [
     function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('Main|FAQ|Prepaid', telemetry);
+        
         var msg = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
@@ -601,7 +661,7 @@ bot.dialog('FaqPrepaid', [
     }, 
     function (session) {
         // Reload menu
-        session.replaceDialog('rootMenu');
+        session.replaceDialog('menu');
     }
 ])
 
@@ -644,25 +704,34 @@ function getCardsPostpaidPlan(session) {
 }
 
 
-// R.5.3 - rootMenu | FAQDialog | Prepaid
+// R.5.3 - menu | FAQDialog | Prepaid
 bot.dialog('getFeedback', [
     function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('Main|Feedback', telemetry);
+
         builder.Prompts.choice(session, "We would appreciate your feedback\n Do you find our Virtual Assistant userful? ", 'Yes|No', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         switch (results.response.index) {
             case 0:
-                transporter.sendMail(mailOptionsYes);
+                var telemetry = telemetryModule.createTelemetry(session);
+                appInsightsClient.trackEvent('Main|Feedback Yes', telemetry);
+
                 break;
             case 1:
-                transporter.sendMail(mailOptionsNo);
+                var telemetry = telemetryModule.createTelemetry(session);
+                appInsightsClient.trackEvent('Main|Feedback No', telemetry);
+
                 break;
             default:
                 session.send("Sorry, I didn\'t quite get that.");
                 break;
         }
+
+
         session.send('Thank you for your feedback');
-        session.replaceDialog('rootMenu');
+        session.replaceDialog('menu');
     }
 ])
 
@@ -674,15 +743,18 @@ bot.dialog('getFeedback', [
 
 bot.dialog('/ref', [
     function (session) {
-        builder.Prompts.choice(session, "What demo would you like to run?", "prompts|picture|cards|list|carousel|receipt|actions|(quit)");
+        builder.Prompts.choice(session, "What demo would you like to run?", "prompts|picture|cards|list|carousel|receipt|actions|quit");
     },
     function (session, results) {
-        if (results.response && results.response.entity != '(quit)') {
+        if (results.response && results.response.entity != 'quit'
+            && results.response.entity != 'menu'
+            && results.response.entity != 'exit'
+            && results.response.entity != 'begin') {
             // Launch demo dialog
             session.beginDialog('/' + results.response.entity);
         } else {
             // Exit the menu
-            session.endDialog();
+            session.replaceDialog('menu');
         }
     },
     function (session, results) {
@@ -977,31 +1049,6 @@ bot.dialog('/weather', [
 ]);
 bot.beginDialogAction('weather', '/weather');   // <-- no 'matches' option means this can only be triggered by a button.
 
-
-
-// create reusable transporter object using the default SMTP transport
-let transporter = nodemailer.createTransport({
-    service: '"Outlook365"',
-    auth: {
-        user: 'chinyankeat@outlook.com',
-        pass: 'Sony12#$%'
-    }
-});
-
-// setup email data with unicode symbols
-let mailOptionsYes = {
-    from: '"Chin Yan Keat" <chinyankeat@outlook.com>', // sender address
-    to: 'trigger@applet.ifttt.com', // list of receivers
-    subject: 'Yellow CS Feedback - Yes', // Subject line
-    text: 'YES' // plain text body
-};
-
-let mailOptionsNo = {
-    from: '"Chin Yan Keat" <chinyankeat@outlook.com>', // sender address
-    to: 'chinyankeat@outlook.com', // list of receivers
-    subject: 'Yellow CS Feedback - No', // Subject line
-    text: 'NO' // plain text body
-};
 
 
 //////////////////////////////////////////////////////////////////////////////
