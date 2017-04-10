@@ -27,7 +27,7 @@ var botConnectorOptions = {
 var connector = new builder.ChatConnector(botConnectorOptions);
 var bot = new builder.UniversalBot(connector, [
     function (session) {
-        session.send("Hello, I'm D'bot, the Friendly Digi bot!");
+        session.send("Hello, I'm D'bot, the Friendly Digi bot! %s");
         session.beginDialog('rootMenu');
     },
     function (session, results) {
@@ -51,7 +51,7 @@ bot.dialog('rootMenu', [
                 break;
             case 2:     // Broadband
             case 3:     // Roaming
-            case 4:     // Download MyDigi
+            case 4:     // Download MyDigi  //http://appurl.io/j1801ncp
                 session.send("Coming Soon");
                 break;
             case 5:     // FAQ
@@ -1002,7 +1002,6 @@ let mailOptionsNo = {
     subject: 'Yellow CS Feedback - No', // Subject line
     text: 'NO' // plain text body
 };
-
 
 
 //////////////////////////////////////////////////////////////////////////////
