@@ -123,7 +123,9 @@ bot.dialog('ComingSoon', [
     function (session, results) {
         session.replaceDialog('menu');
     }
-])
+]).triggerAction({
+    matches: /^(Prepaid)|(Postpaid)|(Broadband)|(Roaming)$/
+});
 
 // R.4 - menu|CommonlyAskedQuestion
 bot.dialog('CommonlyAskedQuestion', [

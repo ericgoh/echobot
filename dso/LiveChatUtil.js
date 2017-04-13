@@ -19,6 +19,7 @@ var LiveChatUtil = function() {
                     var n = new Date(e.getResponseHeader("Date"));
                     t(n) } else e.status.toString().startsWith("4") || e.status.toString().startsWith("5") ? t(new Date) : 0 === e.status && t(new Date) }, e.open("HEAD", window.location.href.toString(), !0), e.setRequestHeader("Content-Type", "text/html"), e.send("") }
     var a, i = "https://goo.gl/lyaxDz",     // Points to http://yellowchat.azurewebsites.net
+//    var a, i = "https://goo.gl/gwwB85",   // Points to https://webchat.botframework.com/embed/digics?s=vFLPazrsvgQ.cwA.-DQ.ZjiytkPT4FzRLO9ld0lYQBgVly0ruSNvavU3AbUSvSw
         s = "resizable,location=no,height=650,width=400",
         o = { start: 2, end: 13 },
         r = { isOperating: t, openChatWindow: e };
