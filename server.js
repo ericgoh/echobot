@@ -5,21 +5,24 @@
 // npm install --save restify
 // npm install --save applicationinsights 
 // npm install --save dotenv-extended   (RUN AS ADMIN)
+// npm install --save node-rest-client
+// npm install --save mathjs
 //
 ////////////////////////////////////////////////////////////
 
-//require('dotenv-extended').load();
+require('dotenv-extended').load();
 
 var restify = require('restify');
 var builder = require('botbuilder');
+var RestClient = require('node-rest-client').Client;
+var restclient = new RestClient();
+var math = require('mathjs');
 
 
-// Setup for Application Insights
-var telemetryModule = require('./telemetry-module.js');
-
+// Initialize Telemetry Modules
+var telemetryModule = require('./telemetry-module.js'); // Setup for Application Insights
 var appInsights = require('applicationinsights');
 appInsights.setup(process.env.APPINSIGHTS_INSTRUMENTATIONKEY).start();
-//appInsights.setup("75f78141-cedd-4274-9ef5-f206b617d998").start();
 var appInsightsClient = appInsights.getClient();
 
 
@@ -39,17 +42,22 @@ var bot = new builder.UniversalBot(connector, [
 
         // Start tracking
         appInsightsClient.trackTrace('start', telemetry);
-        
-        
-        session.send("Hello, I'm Yellow Man, the Friendly Digi bot!");
-        session.send("Enter HELP or MENU at any place to come back to main menu");
-        session.beginDialog('menu');
+                session.beginDialog('menu');
     },
 
     function (session, results) {
-        session.endConversation("Goodbye until next time...");
+        session.endConversation("Please type Menu");
     }
 ]);
+
+// Validators
+bot.library(require('./validators').createLibrary());
+
+////////////////////////////////////////////////////////////////////////////
+// Global Variables
+var MaxRetries = 2; 
+var DefaultErrorPrompt = "Sorry, I don't really Understand. Can you repeat?"
+
 
 
 // Send welcome when conversation with bot is started, by initiating the root dialog
@@ -64,37 +72,35 @@ bot.on('conversationUpdate', function (message) {
 });
 
 
-// R.1 - menu |
+// R - menu
 bot.dialog('menu', [
     function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu', telemetry);
 
-        builder.Prompts.choice(session, "Just pick any of the items below to begin", 'Prepaid|Postpaid|Broadband|Roaming|Download MyDigi|FAQ|Reference|Feedback', { listStyle: builder.ListStyle.button });
+        
+        session.send("Hello, I'm your friendly Digi beta bot and I'll be available from 9pm-12am");
+        builder.Prompts.choice(session, "To get started, these are the things I can help you with. Just click on any of the below and let's get started.", 'Prepaid|Postpaid|Broadband|Roaming|Commonly Asked Question', { listStyle:builder.ListStyle.button, maxRetries:MaxRetries, retryPrompt:DefaultErrorPrompt});
     },
     function (session, results) {
-        switch (results.response.index) {
-            case 0:     // Prepaid
-                session.beginDialog('PrepaidDialog');
-                break;
-            case 1:     // Postpaid
-                session.beginDialog('PostpaidDialog');
-                break;
-            case 2:     // Broadband
-            case 3:     // Roaming
-            case 4:     // Download MyDigi  //http://appurl.io/j1801ncp
-                session.send("Coming Soon");
-                break;
-            case 5:     // FAQ
-                session.beginDialog('FaqDialog');
-                break;
-            case 6:
-                session.beginDialog('/ref');
-                break;
-            case 7:
-                session.beginDialog('getFeedback');
-                break;
-            default:
-                session.send("Sorry, I didn't quite get that.");
-                break;
+        try {
+            switch (results.response.index) {
+                case 0:     // Prepaid
+                case 1:     // Postpaid
+                case 2:     // Broadband
+                case 3:     // Roaming
+                    session.beginDialog('ComingSoon');
+                    break;
+                case 4:
+                    session.beginDialog('CommonlyAskedQuestion');
+                    break;
+                default:
+                    break;
+            }
+        } catch (e) {
+            // After max retries, will come here
+            session.send("Sorry I messed up, let's try again");
+            session.replaceDialog('menu');
         }
     },
     function (session) {
@@ -105,6 +111,544 @@ bot.dialog('menu', [
     matches: /^(menu)|(exit)|(quit)|(depart)|(bye)|(goodbye)|(begin)/i
 });
 
+// R.0 - menu|ComingSoon
+bot.dialog('ComingSoon', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|ComingSoon', telemetry);
+        
+        builder.Prompts.choice(session, "Coming Soon", 'Main Menu', { listStyle: builder.ListStyle.button });
+    },    
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+])
+
+// R.4 - menu|CommonlyAskedQuestion
+bot.dialog('CommonlyAskedQuestion', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion', telemetry);
+        
+        session.send("There's a few ways to go about it");
+        
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('All About My Account')
+                .subtitle('We have the answers to the most asked questions on managing your account')
+//                .images([ builder.CardImage.create(session, 'http://new.digi.com.my/cs/site_template/digi/images/mydigi-exclusive/logo-digi_1.png')])
+                .buttons([
+                    builder.CardAction.imBack(session, "All About My Account", "More"),
+                ]),
+
+                new builder.ThumbnailCard(session)
+                .title('My Digi App')
+                .subtitle('An app to manage all your account needs. Find out how to use it')
+                .buttons([
+                    builder.CardAction.imBack(session, "My Digi App", "More"),
+                ]),
+                        
+                new builder.ThumbnailCard(session)
+                .title('Talk Time Services')
+                .subtitle('Find out how to request from or give prepaid credit to others')
+                .buttons([
+                    builder.CardAction.imBack(session, "Talk Time Services", "More"),
+                ]),
+
+                new builder.ThumbnailCard(session)
+                .title('Charges / Billing')
+                .subtitle('Got questions on your bills? Maybe we can help')
+                .buttons([
+                    builder.CardAction.imBack(session, "Charges / Billing", "More"),
+                ])
+            ]);
+        session.send(respCards);
+        
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    },
+
+])
+
+// R.4.0 - menu|CommonlyAskedQuestion|AllAboutMyAccount
+bot.dialog('AllAboutMyAccount', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount', telemetry);
+        
+        session.send("Just Key in the question number to find out the answer. Example: 3");
+        session.send("1. How to get my acc no\
+                    \n2. What is my PUK code?\
+                    \n3. How to change my acc ownership?\
+                    \n4. How to check F&F?\
+                    \n5. How to add F&F");
+        builder.Prompts.choice(session, "", '1|2|3|4|5|Main Menu|Next Page', { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        switch (results.response.index) {
+        case 0:
+            session.replaceDialog('GetAccountNo');
+            break;
+	    case 1:
+            session.replaceDialog('WhatIsMyPuk');
+            break;
+	    case 2:
+            session.replaceDialog('ChangeMyAccOwnership');
+            break;
+        case 3:
+            session.replaceDialog('CheckFnF');
+            break;
+        case 4: 
+            session.replaceDialog('AddFnF');
+            break;
+        case 5:    // Main Menu
+            session.replaceDialog('menu');
+            break;
+        default:    // Next Page
+            session.replaceDialog('AllAboutMyAccount2');
+            break;
+        }
+    },
+    function (session) {
+        // Reload menu
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /^(All About My Account)/i
+});
+
+// R.4.0.0 - menu|CommonlyAskedQuestion|AllAboutMyAccount|GetAccountNo
+bot.dialog('GetAccountNo', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|GetAccountNo', telemetry);
+        
+        session.send("Your Account Number is available on your bill at the top right hand corner");
+        builder.Prompts.choice(session, "Main Menu", 'menu', { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /^(Get Account No)/i
+});
+
+// R.4.0.1 - menu|CommonlyAskedQuestion|AllAboutMyAccount|WhatIsMyPuk
+bot.dialog('WhatIsMyPuk', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|WhatIsMyPuk', telemetry);
+        
+        session.send("You Can Follow the steps below");        
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Step 1')
+                .subtitle('On the MyDigi app, click on Menu'),
+
+                new builder.ThumbnailCard(session)
+                .title('Step 2')
+                .subtitle('Click on Settings'),
+                        
+                new builder.ThumbnailCard(session)
+                .title('Step 3')
+                .subtitle('Swipe left to select SIM and you will find your PUK code')
+            ]);
+        session.send(respCards);
+        
+        builder.Prompts.choice(session, "Main Menu", 'menu', { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /^(What Is My Puk)/i
+});
+
+// R.4.0.2 - menu|CommonlyAskedQuestion|AllAboutMyAccount|ChangeMyAccOwnership
+bot.dialog('ChangeMyAccOwnership', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|ChangeMyAccOwnership', telemetry);
+        
+        session.send("Please visit the nearest Digi Store to change ownership of account. Both parties must be present together with NRICs for validation");
+        builder.Prompts.choice(session, "Main Menu", 'menu', { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /^(Change My Account Ownership)/i
+});
+
+// R.4.0.3 - menu|CommonlyAskedQuestion|AllAboutMyAccount|CheckFnF
+bot.dialog('CheckFnF', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|CheckFnF', telemetry);
+        
+        session.send("You Can Follow the steps below");        
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Step 1')
+                .subtitle('On the MyDigi app, click on Menu'),
+
+                new builder.ThumbnailCard(session)
+                .title('Step 2')
+                .subtitle('Click on Settings'),
+                        
+                new builder.ThumbnailCard(session)
+                .title('Step 3')
+                .subtitle('Swipe left to select \'Family & Friends\' to view your list')
+            ]);
+        session.send(respCards);
+        
+        builder.Prompts.choice(session, "Main Menu", 'menu', { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /^(Check FnF)|(Check Friends and Family)/i
+});
+
+// R.4.0.5 - menu|CommonlyAskedQuestion|AllAboutMyAccount|AddFnF
+bot.dialog('AddFnF', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|AddFnF', telemetry);
+        
+        session.send("Dial *128*1# and press friends and family™. Reply 1 to register a Digi number as FnF. To register a non-Digi number, reply 2.");
+        builder.Prompts.choice(session, "Main Menu", 'menu', { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /^(Add FnF)|(Add Friends and Family)/i
+});
+
+// R.4.0.6 - menu|CommonlyAskedQuestion|AllAboutMyAccount2
+bot.dialog('AllAboutMyAccount2', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount2', telemetry);
+        
+        session.send("Just Key in the question number to find out the answer. Example: 3");
+        session.send("6. I'm going overseas, what can I do? \
+                    \n7. How do I activate VOLTE\
+                    \n8. How do I port-in?");
+        builder.Prompts.choice(session, "", '6|7|8|Main Menu', { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        switch (results.response.index) {
+        case 0:
+            session.replaceDialog('GoingOverseas');
+            break;
+	    case 1:
+            session.replaceDialog('HowToActivateVolte');
+            break;
+	    case 2:
+            session.replaceDialog('HowToPortIn');
+            break;
+        default:    // Main Menu
+            session.replaceDialog('menu');
+            break;
+        }
+    },
+    function (session) {
+        // Reload menu
+        session.replaceDialog('menu');
+    }
+]);
+
+// R.4.0.6.0 - menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|GoingOverseas
+bot.dialog('GoingOverseas', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|GoingOverseas', telemetry);
+        
+        builder.Prompts.choice(session, "For short holidays, stay in touch by activating Roaming Services", 'menu', { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /^(Going Overseas)|(Activate Roaming)/i
+});
+
+// R.4.0.6.1 - menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToActivateVolte
+bot.dialog('HowToActivateVolte', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToActivateVolte', telemetry);
+        
+        var respCard = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .subtitle('Please check if your device is compatible and the instructions for activation can be found here')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/services/volte', 'Check'),
+                    builder.CardAction.imBack(session, "Activation", "Activation"),
+                    builder.CardAction.imBack(session, "menu", "Main Menu")
+                ])
+            ]);
+        builder.Prompts.choice(session, respCard, "Activation");      
+    },
+    function (session, results) {
+        switch (results.response.index) {
+        case 0:
+            session.beginDialog('ActivateVolte');
+            break;
+        default:
+            session.replaceDialog('menu');
+            break;
+        }
+    }
+]).triggerAction({
+    matches: /^(How to activate Volte)/i
+});
+
+// R.4.0.6.1.0 - menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToActivateVolte|ActivateVolte
+bot.dialog('ActivateVolte', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToActivateVolte|ActivateVolte', telemetry);
+        
+        session.send("You Can Follow the steps below");        
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Step 1')
+                .subtitle('Select \"Settings\"'),
+
+                new builder.ThumbnailCard(session)
+                .title('Step 2')
+                .subtitle('Select \"Mobile Data\"'),
+                        
+                new builder.ThumbnailCard(session)
+                .title('Step 3')
+                .subtitle('Tap on Mobile Data Options'),
+                    
+                new builder.ThumbnailCard(session)
+                .title('Step 4')
+                .subtitle('Select \"Enable 4G\"'),
+
+                new builder.ThumbnailCard(session)
+                .title('Step 5')
+                .subtitle('Choose Voice & Data to enable VoLTE')
+            ]);
+        session.send(respCards);
+        
+        builder.Prompts.choice(session, "Main Menu", 'menu', { listStyle: builder.ListStyle.button });  
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /^(Activate Volte)/i
+});
+
+// R.4.0.6.2 - menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToPortIn
+bot.dialog('HowToPortIn', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToPortIn', telemetry);
+        
+        session.send("Here are a few ways to go about it");
+        var respCard = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Digi Website')
+                .subtitle('Checkout our plans on Digi Website and once you\'ve found the right plan, select Port-in to proceed')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/prepaid-plans', 'Prepaid'),
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/postpaid-plans', 'Postpaid'),
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('Digi Store')
+                .subtitle('Just drop by the nearest Digi Store and we will take care of the rest for you')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/support/digi-store', 'Store Locator'),
+                ])
+                
+            ]);
+        builder.Prompts.choice(session, respCard, "menu");      
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /^(How to Port in)/i
+});
+
+// R.4.1 - menu|CommonlyAskedQuestion|MyDigiApp
+bot.dialog('MyDigiApp', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|MyDigiApp', telemetry);
+        
+        session.send("Just Key in the question number to find out the answer. Example: 3");
+        builder.Prompts.choice(session, "1. How do I get started with MyDigi?\
+                                        \n2. How do I download my bill from MyDigi?\
+                                        \n3. How do I make payment for another via MyDigi?", '1|2|3|Main Menu', { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        switch (results.response.index) {
+        case 0:
+            session.replaceDialog('GetStartedMyDigi');
+            break;
+	    case 1:
+            session.replaceDialog('DownloadBillFrMyDigi');
+            break;
+	    case 2:
+            session.replaceDialog('PayForAnotherNumber');
+            break;
+        default:    // Main Menu
+            session.replaceDialog('menu');
+            break;
+        }
+    }
+]).triggerAction({
+    matches: /^(My Digi App)/i
+});
+
+// R.4.1.0 - menu|CommonlyAskedQuestion|MyDigiApp|GetStartedMyDigi
+bot.dialog('GetStartedMyDigi', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|MyDigiApp|GetStartedMyDigi', telemetry);
+        
+        session.send("You Can Follow the steps below");
+        var respCard = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Step 1')
+                .subtitle('Checkout our plans on Digi Website and once you\'ve found the right plan, select Port-in to proceed')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'http://appurl.io/j1801ncp', 'Download MyDigi'),
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('Step 2')
+                .subtitle('Sign in to the app using a Connect ID or proceed with your number. Make sure to turn on your data or this may not work!')                
+            ]);
+        session.send(respCards);
+        builder.Prompts.choice(session, "Main Menu", 'menu', { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /^(Get Started with MyDigi)/i
+});
+
+// R.4.1.1 - menu|CommonlyAskedQuestion|MyDigiApp|DownloadBillFrMyDigi
+bot.dialog('DownloadBillFrMyDigi', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|MyDigiApp|DownloadBillFrMyDigi', telemetry);
+        
+        session.send("You Can Follow the steps below");        
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Step 1')
+                .subtitle('Click on the Menu Button'),
+
+                new builder.ThumbnailCard(session)
+                .title('Step 2')
+                .subtitle('Click on Bills'),
+                        
+                new builder.ThumbnailCard(session)
+                .title('Step 3')
+                .subtitle('Click on \'More\' icon at the top right corner'),
+                    
+                new builder.ThumbnailCard(session)
+                .title('Step 4')
+                .subtitle('Click on \'Previous Bills\''),
+
+                new builder.ThumbnailCard(session)
+                .title('Step 5')
+                .subtitle('You can view & download your bills for the last 6 months')
+            ]);
+        session.send(respCards);
+        
+        builder.Prompts.choice(session, "Main Menu", 'menu', { listStyle: builder.ListStyle.button });  
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /^(Download Bill From MyDigi)/i
+});
+
+// R.4.1.2 - menu|CommonlyAskedQuestion|MyDigiApp|PayForAnotherNumber
+bot.dialog('PayForAnotherNumber', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|MyDigiApp|PayForAnotherNumber', telemetry);
+        
+        session.send("You Can Follow the steps below");        
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Step 1')
+                .subtitle('Click on the Menu Button'),
+
+                new builder.ThumbnailCard(session)
+                .title('Step 2')
+                .subtitle('Click on Digi Shares'),
+                        
+                new builder.ThumbnailCard(session)
+                .title('Step 3')
+                .subtitle('Click on Add a number to share'),
+                    
+                new builder.ThumbnailCard(session)
+                .title('Step 4')
+                .subtitle('Enter the Name and Mobile Number. Then click on Save'),
+
+                new builder.ThumbnailCard(session)
+                .title('Step 5')
+                .subtitle('Select the name of the person you would like to make payment for, key in the amount and email address. Then click on Pay Bill')
+            ]);
+        session.send(respCards);
+        
+        builder.Prompts.choice(session, "Main Menu", 'menu', { listStyle: builder.ListStyle.button });  
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /^(Pay For Another Number)/i
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+///////////////////////////////////////////Previous Menu, maintained until tested. 
 // R.1 - menu | PrepaidDialog
 bot.dialog('PrepaidDialog', [
     function (session) {
@@ -245,20 +789,21 @@ function getCardsPrepaidPlan(session) {
 bot.dialog('MyAccountPrepaid', [
     function (session) {
         session.send("Just let us verify your identity for a sec ");
-        builder.Prompts.choice(session, "You may choose \"One Time Code\" to get a verification code sent to your phone or you can sign in via \"Connect ID\"", 'One Time Code|Connect ID', { listStyle: builder.ListStyle.button });
+        
+        session.beginDialog('validators:phonenumber', {
+            prompt: session.gettext('What is your phone number?'),
+            retryPrompt: session.gettext('The phone number is invalid. Please key in Digi Phone Number 01xxxxxxxx'),
+            maxRetries: MaxRetries
+        });
     },
     function (session, results) {
-        switch (results.response.index) {
-        case 0:
-            session.beginDialog('OneTimeCode');
-            break;
-        case 1:
-            session.beginDialog('ConnectId');
-            break;
-        default:
-            session.endDialog();
-            break;
-        }
+        session.userData.phoneNumber = results.response;
+        session.userData.oneTimeCode = GenerateOtp(session.userData.phoneNumber);
+        builder.Prompts.text(session, 'I have just sent the One Time Code to you. Can you please key in the 4 digit code?');
+    },
+    function (session, results) {
+        session.send('Your Phone is ' + session.userData.phoneNumber + ' your code is ' + session.userData.oneTimeCode);
+        session.replaceDialog('PrepaidAccountOverview');
     },
     function (session) {
         // Reload menu
@@ -266,21 +811,36 @@ bot.dialog('MyAccountPrepaid', [
     }
 ])
 
-// R.1.4.1 - menu | PrepaidDialog  | MyAccountPrepaid | OneTimeCode
-bot.dialog('OneTimeCode', [
-    function (session) {
-        builder.Prompts.text(session, 'What is your phone number?');
-    },
-    function (session, results) {
-        session.userData.phoneNumber = results.response;
-        builder.Prompts.text(session, 'Just sent the One Time Code to you. Can you please key in the 4 digit code?');        
-    },
-    function (session, results) {
-        session.userData.oneTimeCode = results.response;        
-        session.send('Your Phone is ' + session.userData.phoneNumber + ' your code is ' + session.userData.oneTimeCode);        
-        session.replaceDialog('PrepaidAccountOverview');
-    }
-])
+function GenerateOtp(phoneNumber){
+    
+    var randomotp = math.randomInt(1,9999);
+    var args = {
+        data:  "{\
+                 \"ref_id\": \"TEST123456#\",\
+                 \"service_id\": \"DG_HELLOWIFI\",\
+                 \"msisdn\": \"" + phoneNumber + "\",\
+                 \"status\": \"1\",\
+                 \"transaction_id\": \"\",\
+                 \"price_code\": \"VAS220000\",\
+                 \"keyword\": \"test\",\
+                 \"source_mobtel\": \"20000\",\
+                 \"sender_name\": \"\",\
+                 \"sms_contents\": [\
+                  {\
+                   \"content\": \"RM0.00 Digi Virtual Assistant. Your one time PIN is " + randomotp + ", valid for the next 3 minutes\",\
+                   \"ucp_data_coding_id\": \"0\",\
+                   \"ucp_msg_type\": \"3\",\
+                   \"ucp_msg_class\": \"3\"\
+                  }\
+                 ]\
+                }",
+        headers: { Authorization: "Basic " + "aGVsbG93aWZpOmhlbGxvd2lmaSMxMjM=",
+                   "Content-Type": "application/json"}
+    };
+    restclient.post("https://app.digi.com.my/digiext/smsmt/" + phoneNumber, args, function(data,response) {});
+return randomotp;
+}
+
 
 // R.0.4.1.1 - menu | PrepaidDialog  | MyAccountPrepaid | OneTimeCode | PrepaidAccountOverview
 bot.dialog('PrepaidAccountOverview', [
@@ -337,6 +897,36 @@ bot.dialog('PostpaidDialog', [
         session.replaceDialog('menu');
     }
 ])
+
+
+// R.4 - menu | DownloadMyDigi
+bot.dialog('DownloadMyDigi', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('Main|DownloadMyDigi', telemetry);
+                
+        var downloadMyDigiCard = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Download MyDigi')
+                .subtitle('The all-new MyDigi rewards you in every way')
+                .images([
+                    builder.CardImage.create(session, 'http://new.digi.com.my/cs/site_template/digi/images/mydigi-exclusive/logo-digi_1.png')
+                ])
+                .buttons([
+                    builder.CardAction.openUrl(session, 'http://appurl.io/j1801ncp', 'Download Now'),
+                    builder.CardAction.imBack(session, "Back", "Back")
+                ])
+            ]);
+        builder.Prompts.choice(session, downloadMyDigiCard, "Back");        
+    }, 
+    function (session) {
+        session.endDialog();
+        session.replaceDialog('menu');
+    }
+])
+
 
 // R.5 - menu | FAQDialog
 bot.dialog('FaqDialog', [
@@ -1061,7 +1651,7 @@ server.post('/api/messages', connector.listen());
 
 // Serve a static web page
 server.get(/.*/, restify.serveStatic({
-	'directory': './digi_files',
+	'directory': './dso',
 	'default': 'digi.html'
 }));
 
