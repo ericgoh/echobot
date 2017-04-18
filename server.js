@@ -112,7 +112,7 @@ bot.dialog('menu', [
     matches: /^(menu)|(exit)|(quit)|(depart)|(bye)|(goodbye)|(begin)/i
 });
 
-// R.0 - menu|ComingSoon
+
 bot.dialog('ComingSoon', [
     function (session) {
         var telemetry = telemetryModule.createTelemetry(session);
@@ -816,6 +816,25 @@ bot.dialog('ChangeBillingCycle', [
     matches: /(Change Billing Cycle)/i
 });
 
+bot.dialog('NLP', [
+// R - menu
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('NLP', telemetry);
+      
+        session.send("I will forward your request to our NLP Engine");
+  
+    },
+    function (session) {
+        // Reload menu
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /^(Who)|(What)|(How)(I want)/i
+});
+
+// R.0 - menu|ComingSoon
+
 
 
 
@@ -1005,10 +1024,10 @@ function GenerateOtp(phoneNumber){
                   }\
                  ]\
                 }",
-        headers: { Authorization: "Basic " + "aGVsbG93aWZpOmhlbGxvd2lmaSMxMjM=",
+        headers: { Authorization: "Basic " + process.env.SMS_AUTHORIZATIONKEY,
                    "Content-Type": "application/json"}
     };
-    restclient.post("https://app.digi.com.my/digiext/smsmt/" + phoneNumber, args, function(data,response) {});
+    restclient.post(process.env.SMS_SENDLINK  + phoneNumber, args, function(data,response) {});
 return randomotp;
 }
 
