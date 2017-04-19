@@ -87,10 +87,16 @@ bot.dialog('menu', [
         try {
             switch (results.response.index) {
                 case 0:     // Prepaid
+                    session.beginDialog('Prepaid');
+                    break;
                 case 1:     // Postpaid
+                    session.beginDialog('Postpaid');
+                    break;
                 case 2:     // Broadband
+                    session.beginDialog('Broadband');
+                    break;
                 case 3:     // Roaming
-                    session.beginDialog('ComingSoon');
+                    session.beginDialog('Roaming');
                     break;
                 case 4:
                     session.beginDialog('CommonlyAskedQuestion');
@@ -112,20 +118,271 @@ bot.dialog('menu', [
     matches: /^(menu)|(exit)|(quit)|(depart)|(bye)|(goodbye)|(begin)/i
 });
 
+//
+//bot.dialog('ComingSoon', [
+//    function (session) {
+//        var telemetry = telemetryModule.createTelemetry(session);
+//        appInsightsClient.trackEvent('menu|ComingSoon', telemetry);
+//        
+//        builder.Prompts.choice(session, "Coming Soon", 'Main Menu', { listStyle: builder.ListStyle.button });
+//    },    
+//    function (session, results) {
+//        session.replaceDialog('menu');
+//    }
+//]).triggerAction({
+//    matches: /^(Prepaid)|(Postpaid)|(Broadband)|(Roaming)$/
+//});
 
-bot.dialog('ComingSoon', [
+
+// R.0 - menu|Prepaid
+bot.dialog('Prepaid', [
     function (session) {
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|ComingSoon', telemetry);
+        appInsightsClient.trackEvent('menu|Prepaid', telemetry);
         
-        builder.Prompts.choice(session, "Coming Soon", 'Main Menu', { listStyle: builder.ListStyle.button });
-    },    
+        session.send("What would you like to find out today?");
+        
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Malaysia\'s Best Prepaid Packs')
+                .subtitle('Prepaid Plans')
+                .buttons([
+                    builder.CardAction.imBack(session, "Prepaid Plans", "More"),
+                ]),
+
+                new builder.ThumbnailCard(session)
+                .title('Add On')
+                .subtitle('Stay Connected')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/prepaid-addons', 'More')
+                ]),
+                        
+                new builder.ThumbnailCard(session)
+                .title('Reload')
+                .subtitle('Top-up your credit now!')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/reload-details.ep', 'More')
+                ])
+
+            ]);
+        session.send(respCards);
+        
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    },
+]).triggerAction({
+    matches: /(Prepaid)/i
+});
+
+// R.0.0 - menu|Prepaid|PrepaidPlans
+bot.dialog('PrepaidPlans', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|Prepaid|PrepaidPlans', telemetry);
+
+        session.send("Here are our plans");
+        
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Digi Prepaid Live')
+                .subtitle('Ultimate Video + Music Pack')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=20016&isBundle=n&ppymttype=PREPAID&ptype=VOICE&orderType=NL&_ga=1.167919842.2103412470.1490767162', 'Buy Now'),
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/prepaid/live', 'More Info')
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('Digi Prepaid Best')
+                .subtitle('Unlimited Social Internet Pack')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=20015&isBundle=n&ppymttype=PREPAID&ptype=VOICE&orderType=NL&_ga=1.94994527.2103412470.1490767162', 'Buy Now'),
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/prepaid-plans', 'More Info')
+                ])
+            ]);
+        session.send(respCards);        
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
     function (session, results) {
         session.replaceDialog('menu');
     }
 ]).triggerAction({
-    matches: /^(Prepaid)|(Postpaid)|(Broadband)|(Roaming)$/
+    matches: /(Prepaid Plans)/i
 });
+
+
+// R.1 - menu|Postpaid
+bot.dialog('Postpaid', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|Postpaid', telemetry);
+        
+        session.send("What would you like to find out today?");
+        
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Digi Postpaid')
+                .subtitle('The plans for you')
+                .buttons([
+                    builder.CardAction.imBack(session, "Postpaid Plans", "More"),
+                ]),
+
+                new builder.ThumbnailCard(session)
+                .title('Extras')
+                .subtitle('All teh extras you need to stay connected')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/postpaid-addons', 'More')
+                ])
+            ]);
+        session.send(respCards);
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    },
+]).triggerAction({
+    matches: /(Postpaid)/i
+});
+
+// R.1.0 - menu|Postpaid|PostpaidPlans
+bot.dialog('PostpaidPlans', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|Postpaid|PostpaidPlans', telemetry);
+
+        session.send("Here are our plans");
+        
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Digi Postpaid 150 Infinite')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=DGI150&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=NL&_ga=1.164776316.2103412470.1490767162', 'Buy Now'),
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=DGI150&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=MNP&_ga=1.164776316.2103412470.1490767162', 'Port In'),
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=DGI150&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=COP&_ga=1.238199557.426176229.1488446290', 'Change from Prepaid'),
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/services/change-of-mobile-plans?changePlanName=Digi%20Postpaid%20150%20Infinite', 'Change from Postpaid')
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('Digi Postpaid 50')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10201VPA&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=NL&_ga=1.239507461.769883286.1492574194', 'Buy Now'),
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10201VPA&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=MNP&_ga=1.155287800.2103412470.1490767162', 'Port In'),
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10201VPA&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&_ga=1.64925487.1200425632.1479720347Postpaid&orderType=COP', 'Change from Prepaid'),
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/services/change-of-mobile-plans?changePlanName=Digi%20Postpaid%2050', 'Change from Postpaid')
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('Digi Postpaid 80')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10200VP_EX&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=NL&_ga=1.65621101.2103412470.1490767162', 'Buy Now'),
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10200VP_EX&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=MNP&_ga=1.92479582.2103412470.1490767162', 'Port In'),
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10200VP_EX&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=COP', 'Change from Prepaid'),
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/services/change-of-mobile-plans?changePlanName=Digi%20Postpaid%2080', 'Change from Postpaid')
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('Digi Postpaid 110')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10202VP_EX&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=NL&_ga=1.92479582.2103412470.1490767162', 'Buy Now'),
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10202VP_EX&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=MNP&_ga=1.94988767.2103412470.1490767162', 'Port In'),
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10202VP_EX&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=COP', 'Change from Prepaid'),
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/services/change-of-mobile-plans?changePlanName=Digi%20Postpaid%20110', 'Change from Postpaid')
+                ])
+            ]);
+        session.send(respCards);        
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /(Postpaid Plans)/i
+});
+
+
+// R.2 - menu|Broadband
+bot.dialog('Broadband', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|Broadband', telemetry);
+        
+        session.send("What would you like to find out today?");
+        
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Digi Broadband')
+                .subtitle('Non stop entertainment')
+                .buttons([
+                    builder.CardAction.imBack(session, "Broadband Plans", "More"),
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('Running out of quota? ')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'http://digi.my/mybb', 'More')
+                ])
+            ]);
+        session.send(respCards);
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    },
+]).triggerAction({
+    matches: /(Broadband)/i
+});
+
+// R.1.0 - menu|Broadband|BroadbandPlans
+bot.dialog('BroadbandPlans', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|Broadband|BroadbandPlans', telemetry);
+
+        session.send("Here are our plans");
+        
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Broadband 30')
+                .subtitle('For prepaid')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=20017&isBundle=n&ppymttype=PREPAID&ptype=BB&_ga=1.55846120.2103412470.1490767162', 'Buy Now'),
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/broadband', 'More Info')
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('Broadband 60')
+                .subtitle('For Postpaid')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=90000P&isBundle=y&ppymttype=POSTPAID&ptype=BB&_ga=1.55846120.2103412470.1490767162', 'Buy Now'),
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/broadband', 'More Info')
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('Broadband 100')
+                .subtitle('For Postpaid')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=90001P&isBundle=y&ppymttype=POSTPAID&ptype=BB&_ga=1.156903800.2103412470.1490767162', 'Buy Now'),
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/broadband', 'More Info')
+                ]),
+            ]);
+        session.send(respCards);        
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /(Broadband Plans)/i
+});
+
+
+
 
 // R.4 - menu|CommonlyAskedQuestion
 bot.dialog('CommonlyAskedQuestion', [
