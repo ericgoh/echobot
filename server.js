@@ -382,6 +382,345 @@ bot.dialog('BroadbandPlans', [
 });
 
 
+// R.3 - menu|Roaming
+bot.dialog('Roaming', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|Roaming', telemetry);
+        
+        session.send("What would you like to find out today?");
+        
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Roaming Plans')
+                .subtitle('Check out your roaming options')
+                .buttons([
+                    builder.CardAction.imBack(session, "Roaming Plans", "More"),
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('Roam by country? ')
+                .subtitle('Just let us know where you\'regoing')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/roaming/international-roaming-rates', 'More')
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('Roaming Tips')
+                .subtitle('Here\'s all your need to know to stay connected')
+                .buttons([
+                    builder.CardAction.imBack(session, "Roaming Tips", "More"),
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('IDD Rates')
+                .subtitle('International calls + SMS Rates')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/roaming/international-calls-sms-rates', 'More')
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('IDD 133')
+                .subtitle('Enjoy the lowest IDD Rates to 36 countries')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/roaming/idd-133', 'More')
+                ])
+            ]);
+        session.send(respCards);
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    },
+]).triggerAction({
+    matches: /(Roaming)/i
+});
+
+// R.3.0 - menu|Roaming|RoamingPlans
+bot.dialog('RoamingPlans', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|Roaming|RoamingPlans', telemetry);
+
+        session.send("You can roam with the following");
+        
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Roam Like Home')
+                .subtitle('The only postpaid plan you need to roam with')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/roaming/roam-like-home-monthly', 'More')
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('Roaming Pass')
+                .subtitle('Round the clock chatting & Surfing in 50 countries')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/roaming/roaming-pass', 'More')
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('Unlimited Internet')
+                .subtitle('Enjoy a hassle free roaming experience')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'http://new.digi.com.my/roaming/unlimited-internet', 'More')
+                ]),
+            ]);
+        session.send(respCards);        
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /(Roaming Plans)/i
+});
+
+// R.3.1 - menu|Roaming|RoamingTips
+bot.dialog('RoamingTips', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|Roaming|RoamingTips', telemetry);
+
+        session.send("Let's get ready to roam");
+        
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Activate Roaming Services')
+                .subtitle('How long are you with Digi?')
+                .buttons([
+                    builder.CardAction.imBack(session, "Activate Roaming Over 6 Months", "More"),
+                    builder.CardAction.imBack(session, "Activate Roaming Below 6 Months", "Less")
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('Turn on/off data roaming')
+                .buttons([
+                    builder.CardAction.imBack(session, "iOS Data Roaming", "iOS"),
+                    builder.CardAction.imBack(session, "Android Data Roaming", "Android")
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('Purchase / subscribe to Roam Plass')
+                .buttons([
+                    builder.CardAction.imBack(session, "Subscribe Roaming Pass", "More")
+                ]),
+                new builder.ThumbnailCard(session)
+                .title('Usage Checking')
+                .buttons([
+                    builder.CardAction.imBack(session, "MyDigi Check Roam Usage", "MyDigi"),
+                    builder.CardAction.imBack(session, "UMB Check Roam Usage", "UMB")
+                ])
+            ]);
+        session.send(respCards);        
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /(Roaming Tips)/i
+});
+
+// R.3.1.0 - menu|Roaming|RoamingTips|ActivateRoamingOver6Months
+bot.dialog('ActivateRoamingOver6Months', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|Roaming|RoamingTips|ActivateRoamingOver6Months', telemetry);
+
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Self-activate at MyDigi: ')
+                .subtitle('Go to Plan Settings > \
+                        \n My Subscription >\
+                        \n International Roaming > \
+                        \n click \"Subscribe\" >')
+            ]);
+        session.send(respCards);        
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /(Activate Roaming Over 6 Months)/i
+});
+
+// R.3.1.1 - menu|Roaming|RoamingTips|ActivateRoamingBelow6Months
+bot.dialog('ActivateRoamingBelow6Months', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|Roaming|RoamingTips|ActivateRoamingBelow6Months', telemetry);
+
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Self-activate at MyDigi: ')
+                .subtitle('Please provide us with \
+                        \n i) Photocopy of NRIC \
+                        \n ii) Valid Passport\
+                        \n iii) Work permit (for non-Malaysian)')
+            ]);
+        session.send(respCards);        
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /(Activate Roaming Below 6 Months)/i
+});
+
+// R.3.1.2 - menu|Roaming|RoamingTips|iOSDataRoaming
+bot.dialog('iOSDataRoaming', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|Roaming|RoamingTips|iOSDataRoaming', telemetry);
+
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('iOS Turn on/off data roaming')
+                .subtitle('Go to Settings > Mobile Data > \
+                        \n Mobile Data Options > \
+                        \nslide the \"Data Roaming\" ON/OFF')
+            ]);
+        session.send(respCards);        
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /(iOS Data Roaming)/i
+});
+
+// R.3.1.3 - menu|Roaming|RoamingTips|AndroidDataRoaming
+bot.dialog('AndroidDataRoaming', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|Roaming|RoamingTips|AndroidDataRoaming', telemetry);
+
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Android Turn on/off data roaming')
+                .subtitle('Go to Settings > Mobile networks > slide the "Data Roaming" ON/OFF')
+            ]);
+        session.send(respCards);        
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /(Android Data Roaming)/i
+});
+
+// R.3.1.4 - menu|Roaming|RoamingTips|SubscribeRoamingPass
+bot.dialog('SubscribeRoamingPass', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|Roaming|RoamingTips|SubscribeRoamingPass', telemetry);
+
+        session.send("BEFORE DEPARTURE: \
+                    \nMake sure you turn off Data Roaming or Cellular Data/Mobile Data on your mobile phone");        
+        session.send("Upon Arrival, follow these Steps");
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Step 1')
+                .subtitle('Dial *128*5*1*6#'),
+                new builder.ThumbnailCard(session)
+                .title('Step 2')
+                .subtitle('Press "2" to "Purchase Roaming Top Up"'),
+                new builder.ThumbnailCard(session)
+                .title('Step 3')
+                .subtitle('You\'ll receive a confirmation SMS to notify you of successful Roaming Pass purchase'),
+                new builder.ThumbnailCard(session)
+                .title('Step 4')
+                .subtitle('Manually select the specified/applicable network operator'),
+                new builder.ThumbnailCard(session)
+                .title('Step 5')
+                .subtitle('Turn on Data Roaming or Cellular Data/Mobile Data on your mobile phone')
+            ]);
+        session.send(respCards);        
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /(Subscribe Roaming Pass)/i
+});
+
+// R.3.1.5 - menu|Roaming|RoamingTips|MyDigiCheckRoamUsage
+bot.dialog('MyDigiCheckRoamUsage', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|Roaming|RoamingTips|MyDigiCheckRoamUsage', telemetry);
+
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Step 1')
+                .subtitle('On usage page, select "View Details"'),
+                new builder.ThumbnailCard(session)
+                .title('Step 2')
+                .subtitle('Select "Internet" for Internet quota balance'),
+                new builder.ThumbnailCard(session)
+                .title('Step 3')
+                .subtitle('Select "Voice" for Voice minutes balance')
+            ]);
+        session.send(respCards);        
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /(MyDigi Check Roam Usage)/i
+});
+
+// R.3.1.6 - menu|Roaming|RoamingTips|UmbCheckRoamUsage
+bot.dialog('UmbCheckRoamUsage', [
+    function (session) {
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent('menu|Roaming|RoamingTips|UmbCheckRoamUsage', telemetry);
+
+        session.send("How to check balance for my Roaming Pass");
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.ThumbnailCard(session)
+                .title('Step 1')
+                .subtitle('In UMB: Dial *128*5*1*6#'),
+                new builder.ThumbnailCard(session)
+                .title('Step 2')
+                .subtitle('Select 3 for voice minutes balance'),
+                new builder.ThumbnailCard(session)
+                .title('Step 3')
+                .subtitle('View your balance')
+            ]);
+        session.send(respCards);        
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    }
+]).triggerAction({
+    matches: /(UMB Check Roam Usage)/i
+});
+
+
+
+
+
 
 
 // R.4 - menu|CommonlyAskedQuestion
@@ -1078,8 +1417,6 @@ bot.dialog('NLP', [
     function (session) {
         var telemetry = telemetryModule.createTelemetry(session);
         appInsightsClient.trackEvent('NLP', telemetry);
-      
-        session.send("I will forward your request to our NLP Engine");
   
     },
     function (session) {
