@@ -32,17 +32,16 @@ var botConnectorOptions = {
     appPassword: process.env.BOTFRAMEWORK_APPSECRET
 };
 
+// Session Data
+var LastMenu = 'LastMenu';
+var NumOfFeedback = 'NumOfFeedback';
+
 
 // Create bot
 var connector = new builder.ChatConnector(botConnectorOptions);
 var bot = new builder.UniversalBot(connector, [
 
     function (session) {
-        var telemetry = telemetryModule.createTelemetry(session, { setDefault: false });
-
-        // Start tracking
-        appInsightsClient.trackTrace('start', telemetry);
-
         session.beginDialog('menu');
     },
 
@@ -50,6 +49,7 @@ var bot = new builder.UniversalBot(connector, [
         session.endConversation("Please type Menu");
     }
 ]);
+
 
 // Validators
 bot.library(require('./validators').createLibrary());
@@ -66,21 +66,34 @@ bot.on('conversationUpdate', function (message) {
     if (message.membersAdded) {
         message.membersAdded.forEach(function (identity) {
             if (identity.id === message.address.bot.id) {
-                bot.beginDialog(message.address, 'menu');
+                bot.beginDialog(message.address, 'intro');
             }
         });
     }
 });
 
+// R - menu
+bot.dialog('intro', [
+    function (session) {
+        // Initialize Session Data
+        session.privateConversationData[LastMenu] = 'intro';
+        session.privateConversationData[NumOfFeedback] = 0;
+        var telemetry = telemetryModule.createTelemetry(session);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
+
+        
+        session.send("Hello, I'm your friendly Digi beta bot and I'll be available from 9pm-12am");
+        session.replaceDialog('menu');
+    }
+]);
 
 // R - menu
 bot.dialog('menu', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
 
-        
-        session.send("Hello, I'm your friendly Digi beta bot and I'll be available from 9pm-12am");
         builder.Prompts.choice(session, "To get started, these are the things I can help you with. Just click on any of the below and let's get started.", 'Prepaid|Postpaid|Broadband|Roaming|Commonly Asked Question', { listStyle:builder.ListStyle.button, maxRetries:MaxRetries, retryPrompt:DefaultErrorPrompt});
     },
     function (session, results) {
@@ -118,27 +131,13 @@ bot.dialog('menu', [
     matches: /^(menu)|(exit)|(quit)|(depart)|(bye)|(goodbye)|(begin)/i
 });
 
-//
-//bot.dialog('ComingSoon', [
-//    function (session) {
-//        var telemetry = telemetryModule.createTelemetry(session);
-//        appInsightsClient.trackEvent('menu|ComingSoon', telemetry);
-//        
-//        builder.Prompts.choice(session, "Coming Soon", 'Main Menu', { listStyle: builder.ListStyle.button });
-//    },    
-//    function (session, results) {
-//        session.replaceDialog('menu');
-//    }
-//]).triggerAction({
-//    matches: /^(Prepaid)|(Postpaid)|(Broadband)|(Roaming)$/
-//});
-
 
 // R.0 - menu|Prepaid
 bot.dialog('Prepaid', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|Prepaid';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|Prepaid', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("What would you like to find out today?");
         
@@ -148,6 +147,7 @@ bot.dialog('Prepaid', [
                 new builder.ThumbnailCard(session)
                 .title('Malaysia\'s Best Prepaid Packs')
                 .subtitle('Prepaid Plans')
+                .images([ builder.CardImage.create(session, './images/Prepaid-Plans.PNG') ])
                 .buttons([
                     builder.CardAction.imBack(session, "Prepaid Plans", "More"),
                 ]),
@@ -155,6 +155,7 @@ bot.dialog('Prepaid', [
                 new builder.ThumbnailCard(session)
                 .title('Add On')
                 .subtitle('Stay Connected')
+                .images([ builder.CardImage.create(session, './images/Prepaid-Addons.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/prepaid-addons', 'More')
                 ]),
@@ -162,6 +163,7 @@ bot.dialog('Prepaid', [
                 new builder.ThumbnailCard(session)
                 .title('Reload')
                 .subtitle('Top-up your credit now!')
+                .images([ builder.CardImage.create(session, './images/Prepaid-Reload.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/reload-details.ep', 'More')
                 ])
@@ -172,7 +174,8 @@ bot.dialog('Prepaid', [
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     },
 ]).triggerAction({
     matches: /(Prepaid)/i
@@ -181,8 +184,9 @@ bot.dialog('Prepaid', [
 // R.0.0 - menu|Prepaid|PrepaidPlans
 bot.dialog('PrepaidPlans', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|Prepaid|PrepaidPlans';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|Prepaid|PrepaidPlans', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
 
         session.send("Here are our plans");
         
@@ -192,6 +196,7 @@ bot.dialog('PrepaidPlans', [
                 new builder.ThumbnailCard(session)
                 .title('Digi Prepaid Live')
                 .subtitle('Ultimate Video + Music Pack')
+                .images([ builder.CardImage.create(session, './images/Prepaid-Live.png') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=20016&isBundle=n&ppymttype=PREPAID&ptype=VOICE&orderType=NL&_ga=1.167919842.2103412470.1490767162', 'Buy Now'),
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/prepaid/live', 'More Info')
@@ -199,6 +204,7 @@ bot.dialog('PrepaidPlans', [
                 new builder.ThumbnailCard(session)
                 .title('Digi Prepaid Best')
                 .subtitle('Unlimited Social Internet Pack')
+                .images([ builder.CardImage.create(session, './images/Prepaid-Best.png') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=20015&isBundle=n&ppymttype=PREPAID&ptype=VOICE&orderType=NL&_ga=1.94994527.2103412470.1490767162', 'Buy Now'),
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/prepaid-plans', 'More Info')
@@ -208,7 +214,8 @@ bot.dialog('PrepaidPlans', [
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Prepaid Plans)/i
@@ -218,8 +225,9 @@ bot.dialog('PrepaidPlans', [
 // R.1 - menu|Postpaid
 bot.dialog('Postpaid', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|Postpaid';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|Postpaid', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("What would you like to find out today?");
         
@@ -229,13 +237,15 @@ bot.dialog('Postpaid', [
                 new builder.ThumbnailCard(session)
                 .title('Digi Postpaid')
                 .subtitle('The plans for you')
+                .images([ builder.CardImage.create(session, './images/Postpaid-Plans.PNG') ])
                 .buttons([
                     builder.CardAction.imBack(session, "Postpaid Plans", "More"),
                 ]),
 
                 new builder.ThumbnailCard(session)
                 .title('Extras')
-                .subtitle('All teh extras you need to stay connected')
+                .subtitle('All the extras you need to stay connected')
+                .images([ builder.CardImage.create(session, './images/Postpaid-Extra.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/postpaid-addons', 'More')
                 ])
@@ -244,7 +254,8 @@ bot.dialog('Postpaid', [
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     },
 ]).triggerAction({
     matches: /(Postpaid)/i
@@ -253,8 +264,9 @@ bot.dialog('Postpaid', [
 // R.1.0 - menu|Postpaid|PostpaidPlans
 bot.dialog('PostpaidPlans', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|Postpaid|PostpaidPlans';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|Postpaid|PostpaidPlans', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
 
         session.send("Here are our plans");
         
@@ -263,6 +275,7 @@ bot.dialog('PostpaidPlans', [
             .attachments([
                 new builder.ThumbnailCard(session)
                 .title('Digi Postpaid 150 Infinite')
+                .images([ builder.CardImage.create(session, './images/Postpaid-Infinite.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=DGI150&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=NL&_ga=1.164776316.2103412470.1490767162', 'Buy Now'),
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=DGI150&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=MNP&_ga=1.164776316.2103412470.1490767162', 'Port In'),
@@ -271,6 +284,7 @@ bot.dialog('PostpaidPlans', [
                 ]),
                 new builder.ThumbnailCard(session)
                 .title('Digi Postpaid 50')
+                .images([ builder.CardImage.create(session, './images/Postpaid-50.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10201VPA&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=NL&_ga=1.239507461.769883286.1492574194', 'Buy Now'),
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10201VPA&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=MNP&_ga=1.155287800.2103412470.1490767162', 'Port In'),
@@ -279,6 +293,7 @@ bot.dialog('PostpaidPlans', [
                 ]),
                 new builder.ThumbnailCard(session)
                 .title('Digi Postpaid 80')
+                .images([ builder.CardImage.create(session, './images/Postpaid-80.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10200VP_EX&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=NL&_ga=1.65621101.2103412470.1490767162', 'Buy Now'),
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10200VP_EX&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=MNP&_ga=1.92479582.2103412470.1490767162', 'Port In'),
@@ -287,6 +302,7 @@ bot.dialog('PostpaidPlans', [
                 ]),
                 new builder.ThumbnailCard(session)
                 .title('Digi Postpaid 110')
+                .images([ builder.CardImage.create(session, './images/Postpaid-110.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10202VP_EX&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=NL&_ga=1.92479582.2103412470.1490767162', 'Buy Now'),
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10202VP_EX&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=MNP&_ga=1.94988767.2103412470.1490767162', 'Port In'),
@@ -298,7 +314,8 @@ bot.dialog('PostpaidPlans', [
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Postpaid Plans)/i
@@ -308,8 +325,9 @@ bot.dialog('PostpaidPlans', [
 // R.2 - menu|Broadband
 bot.dialog('Broadband', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|Broadband';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|Broadband', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("What would you like to find out today?");
         
@@ -332,7 +350,8 @@ bot.dialog('Broadband', [
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     },
 ]).triggerAction({
     matches: /(Broadband)/i
@@ -341,8 +360,9 @@ bot.dialog('Broadband', [
 // R.1.0 - menu|Broadband|BroadbandPlans
 bot.dialog('BroadbandPlans', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|Broadband|BroadbandPlans';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|Broadband|BroadbandPlans', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
 
         session.send("Here are our plans");
         
@@ -375,7 +395,8 @@ bot.dialog('BroadbandPlans', [
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Broadband Plans)/i
@@ -385,8 +406,9 @@ bot.dialog('BroadbandPlans', [
 // R.3 - menu|Roaming
 bot.dialog('Roaming', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|Roaming';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|Roaming', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("What would you like to find out today?");
         
@@ -428,7 +450,8 @@ bot.dialog('Roaming', [
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     },
 ]).triggerAction({
     matches: /(Roaming)/i
@@ -437,8 +460,9 @@ bot.dialog('Roaming', [
 // R.3.0 - menu|Roaming|RoamingPlans
 bot.dialog('RoamingPlans', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|Roaming|RoamingPlans';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|Roaming|RoamingPlans', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
 
         session.send("You can roam with the following");
         
@@ -464,11 +488,12 @@ bot.dialog('RoamingPlans', [
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/roaming/unlimited-internet', 'More')
                 ]),
             ]);
-        session.send(respCards);        
+        session.send(respCards);
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Roaming Plans)/i
@@ -477,8 +502,9 @@ bot.dialog('RoamingPlans', [
 // R.3.1 - menu|Roaming|RoamingTips
 bot.dialog('RoamingTips', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|Roaming|RoamingTips';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|Roaming|RoamingTips', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
 
         session.send("Let's get ready to roam");
         
@@ -514,7 +540,8 @@ bot.dialog('RoamingTips', [
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Roaming Tips)/i
@@ -523,8 +550,9 @@ bot.dialog('RoamingTips', [
 // R.3.1.0 - menu|Roaming|RoamingTips|ActivateRoamingOver6Months
 bot.dialog('ActivateRoamingOver6Months', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|Roaming|RoamingTips|ActivateRoamingOver6Months';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|Roaming|RoamingTips|ActivateRoamingOver6Months', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
 
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -540,7 +568,8 @@ bot.dialog('ActivateRoamingOver6Months', [
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Activate Roaming Over 6 Months)/i
@@ -549,8 +578,9 @@ bot.dialog('ActivateRoamingOver6Months', [
 // R.3.1.1 - menu|Roaming|RoamingTips|ActivateRoamingBelow6Months
 bot.dialog('ActivateRoamingBelow6Months', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|Roaming|RoamingTips|ActivateRoamingBelow6Months';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|Roaming|RoamingTips|ActivateRoamingBelow6Months', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
 
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -566,7 +596,8 @@ bot.dialog('ActivateRoamingBelow6Months', [
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Activate Roaming Below 6 Months)/i
@@ -575,8 +606,9 @@ bot.dialog('ActivateRoamingBelow6Months', [
 // R.3.1.2 - menu|Roaming|RoamingTips|iOSDataRoaming
 bot.dialog('iOSDataRoaming', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|Roaming|RoamingTips|iOSDataRoaming';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|Roaming|RoamingTips|iOSDataRoaming', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
 
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -591,7 +623,8 @@ bot.dialog('iOSDataRoaming', [
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(iOS Data Roaming)/i
@@ -600,8 +633,9 @@ bot.dialog('iOSDataRoaming', [
 // R.3.1.3 - menu|Roaming|RoamingTips|AndroidDataRoaming
 bot.dialog('AndroidDataRoaming', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|Roaming|RoamingTips|AndroidDataRoaming';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|Roaming|RoamingTips|AndroidDataRoaming', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
 
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -614,7 +648,8 @@ bot.dialog('AndroidDataRoaming', [
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Android Data Roaming)/i
@@ -623,8 +658,9 @@ bot.dialog('AndroidDataRoaming', [
 // R.3.1.4 - menu|Roaming|RoamingTips|SubscribeRoamingPass
 bot.dialog('SubscribeRoamingPass', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|Roaming|RoamingTips|SubscribeRoamingPass';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|Roaming|RoamingTips|SubscribeRoamingPass', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
 
         session.send("BEFORE DEPARTURE: \
                     \nMake sure you turn off Data Roaming or Cellular Data/Mobile Data on your mobile phone");        
@@ -652,7 +688,8 @@ bot.dialog('SubscribeRoamingPass', [
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Subscribe Roaming Pass)/i
@@ -661,8 +698,9 @@ bot.dialog('SubscribeRoamingPass', [
 // R.3.1.5 - menu|Roaming|RoamingTips|MyDigiCheckRoamUsage
 bot.dialog('MyDigiCheckRoamUsage', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|Roaming|RoamingTips|MyDigiCheckRoamUsage';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|Roaming|RoamingTips|MyDigiCheckRoamUsage', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
 
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -681,7 +719,8 @@ bot.dialog('MyDigiCheckRoamUsage', [
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(MyDigi Check Roam Usage)/i
@@ -690,8 +729,9 @@ bot.dialog('MyDigiCheckRoamUsage', [
 // R.3.1.6 - menu|Roaming|RoamingTips|UmbCheckRoamUsage
 bot.dialog('UmbCheckRoamUsage', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|Roaming|RoamingTips|UmbCheckRoamUsage';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|Roaming|RoamingTips|UmbCheckRoamUsage', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
 
         session.send("How to check balance for my Roaming Pass");
         var respCards = new builder.Message(session)
@@ -711,23 +751,20 @@ bot.dialog('UmbCheckRoamUsage', [
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(UMB Check Roam Usage)/i
 });
 
 
-
-
-
-
-
 // R.4 - menu|CommonlyAskedQuestion
 bot.dialog('CommonlyAskedQuestion', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("There's a few ways to go about it");
         
@@ -767,7 +804,8 @@ bot.dialog('CommonlyAskedQuestion', [
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     },
 ]).triggerAction({
     matches: /(Commonly Asked Question)/i
@@ -776,8 +814,9 @@ bot.dialog('CommonlyAskedQuestion', [
 // R.4.0 - menu|CommonlyAskedQuestion|AllAboutMyAccount
 bot.dialog('AllAboutMyAccount', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|AllAboutMyAccount';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("Just Key in the question number to find out the answer. Example: 3");
         session.send("1. How to get my acc no\
@@ -814,7 +853,8 @@ bot.dialog('AllAboutMyAccount', [
     },
     function (session) {
         // Reload menu
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(About My Account)/i
@@ -823,14 +863,16 @@ bot.dialog('AllAboutMyAccount', [
 // R.4.0.0 - menu|CommonlyAskedQuestion|AllAboutMyAccount|GetAccountNo
 bot.dialog('GetAccountNo', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|AllAboutMyAccount|GetAccountNo';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|GetAccountNo', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("Your Account Number is available on your bill at the top right hand corner");
         builder.Prompts.choice(session, "", 'Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Get Account No)/i
@@ -839,8 +881,9 @@ bot.dialog('GetAccountNo', [
 // R.4.0.1 - menu|CommonlyAskedQuestion|AllAboutMyAccount|WhatIsMyPuk
 bot.dialog('WhatIsMyPuk', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|AllAboutMyAccount|WhatIsMyPuk';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|WhatIsMyPuk', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("You can follow the steps below");        
         var respCards = new builder.Message(session)
@@ -863,7 +906,8 @@ bot.dialog('WhatIsMyPuk', [
         builder.Prompts.choice(session, "", 'Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(What Is My Puk)/i
@@ -872,14 +916,16 @@ bot.dialog('WhatIsMyPuk', [
 // R.4.0.2 - menu|CommonlyAskedQuestion|AllAboutMyAccount|ChangeMyAccOwnership
 bot.dialog('ChangeMyAccOwnership', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|AllAboutMyAccount|ChangeMyAccOwnership';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|ChangeMyAccOwnership', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("Please visit the nearest Digi Store to change ownership of account. Both parties must be present together with NRICs for validation");
         builder.Prompts.choice(session, "", 'Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Change My Account Ownership)/i
@@ -888,8 +934,9 @@ bot.dialog('ChangeMyAccOwnership', [
 // R.4.0.3 - menu|CommonlyAskedQuestion|AllAboutMyAccount|CheckFnF
 bot.dialog('CheckFnF', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|AllAboutMyAccount|CheckFnF';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|CheckFnF', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("You can follow the steps below");        
         var respCards = new builder.Message(session)
@@ -912,7 +959,8 @@ bot.dialog('CheckFnF', [
         builder.Prompts.choice(session, "", 'Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Check FnF)|(Check Friends and Family)/i
@@ -921,14 +969,16 @@ bot.dialog('CheckFnF', [
 // R.4.0.5 - menu|CommonlyAskedQuestion|AllAboutMyAccount|AddFnF
 bot.dialog('AddFnF', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|AllAboutMyAccount|AddFnF';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|AddFnF', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("Dial *128*1# and press friends and family™. Reply 1 to register a Digi number as FnF. To register a non-Digi number, reply 2.");
         builder.Prompts.choice(session, "", 'Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Add FnF)|(Add Friends and Family)/i
@@ -937,8 +987,9 @@ bot.dialog('AddFnF', [
 // R.4.0.6 - menu|CommonlyAskedQuestion|AllAboutMyAccount2
 bot.dialog('AllAboutMyAccount2', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|AllAboutMyAccount2';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount2', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("Just Key in the question number to find out the answer. Example: 6");
         builder.Prompts.choice(session, " 6 I'm going overseas, what can I do? \
@@ -963,21 +1014,23 @@ bot.dialog('AllAboutMyAccount2', [
         }
     },
     function (session) {
-        // Reload menu
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]);
 
 // R.4.0.6.0 - menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|GoingOverseas
 bot.dialog('GoingOverseas', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|GoingOverseas';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|GoingOverseas', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         builder.Prompts.choice(session, "For short holidays, stay in touch by activating Roaming Services", 'menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Going Overseas)|(Activate Roaming)/i
@@ -986,8 +1039,9 @@ bot.dialog('GoingOverseas', [
 // R.4.0.6.1 - menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToActivateVolte
 bot.dialog('HowToActivateVolte', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToActivateVolte';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToActivateVolte', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -1008,7 +1062,8 @@ bot.dialog('HowToActivateVolte', [
             session.beginDialog('ActivateVolte');
             break;
         default:
-            session.replaceDialog('menu');
+            session.replaceDialog('getFeedback');
+//            session.replaceDialog('menu');
             break;
         }
     }
@@ -1019,8 +1074,9 @@ bot.dialog('HowToActivateVolte', [
 // R.4.0.6.1.0 - menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToActivateVolte|ActivateVolte
 bot.dialog('ActivateVolte', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToActivateVolte|ActivateVolte';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToActivateVolte|ActivateVolte', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("You can follow the steps below");        
         var respCards = new builder.Message(session)
@@ -1051,7 +1107,8 @@ bot.dialog('ActivateVolte', [
         builder.Prompts.choice(session, "", 'Main Menu', { listStyle: builder.ListStyle.button });  
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Activate Volte)/i
@@ -1060,8 +1117,9 @@ bot.dialog('ActivateVolte', [
 // R.4.0.6.2 - menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToPortIn
 bot.dialog('HowToPortIn', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToPortIn';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToPortIn', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("Here are a few ways to go about it");
         var respCards = new builder.Message(session)
@@ -1085,7 +1143,8 @@ bot.dialog('HowToPortIn', [
         builder.Prompts.choice(session, "", 'Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(How to Port in)/i
@@ -1094,8 +1153,9 @@ bot.dialog('HowToPortIn', [
 // R.4.1 - menu|CommonlyAskedQuestion|MyDigiApp
 bot.dialog('MyDigiApp', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|MyDigiApp';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|MyDigiApp', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("Just Key in the question number to find out the answer. Example: 3");
         builder.Prompts.choice(session, "1. How do I get started with MyDigi?\
@@ -1114,7 +1174,8 @@ bot.dialog('MyDigiApp', [
             session.replaceDialog('PayForAnotherNumber');
             break;
         default:    // Main Menu
-            session.replaceDialog('menu');
+            session.replaceDialog('getFeedback');
+//            session.replaceDialog('menu');
             break;
         }
     }
@@ -1125,8 +1186,9 @@ bot.dialog('MyDigiApp', [
 // R.4.1.0 - menu|CommonlyAskedQuestion|MyDigiApp|GetStartedMyDigi
 bot.dialog('GetStartedMyDigi', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|MyDigiApp|GetStartedMyDigi';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|MyDigiApp|GetStartedMyDigi', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("You can follow the steps below");
         var respCards = new builder.Message(session)
@@ -1146,7 +1208,8 @@ bot.dialog('GetStartedMyDigi', [
         builder.Prompts.choice(session, "", 'Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Get Started with MyDigi)/i
@@ -1155,8 +1218,9 @@ bot.dialog('GetStartedMyDigi', [
 // R.4.1.1 - menu|CommonlyAskedQuestion|MyDigiApp|DownloadBillFrMyDigi
 bot.dialog('DownloadBillFrMyDigi', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|MyDigiApp|DownloadBillFrMyDigi';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|MyDigiApp|DownloadBillFrMyDigi', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("You can follow the steps below");        
         var respCards = new builder.Message(session)
@@ -1179,7 +1243,8 @@ bot.dialog('DownloadBillFrMyDigi', [
             session.replaceDialog('SeeBillsForPastSixMonths');
             break;
         default:    // Main Menu
-            session.replaceDialog('menu');
+            session.replaceDialog('getFeedback');
+//            session.replaceDialog('menu');
             break;
         }
     }
@@ -1191,8 +1256,9 @@ bot.dialog('DownloadBillFrMyDigi', [
 // R.4.1.1.0 - menu|CommonlyAskedQuestion|MyDigiApp|DownloadBillFrMyDigi|SeeBillsForPastSixMonths
 bot.dialog('SeeBillsForPastSixMonths', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|MyDigiApp|DownloadBillFrMyDigi|SeeBillsForPastSixMonths';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|MyDigiApp|DownloadBillFrMyDigi|SeeBillsForPastSixMonths', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("You can follow the steps below");        
         var respCards = new builder.Message(session)
@@ -1223,7 +1289,8 @@ bot.dialog('SeeBillsForPastSixMonths', [
         builder.Prompts.choice(session, "", 'menu', { listStyle: builder.ListStyle.button });  
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Bills for past 6 months)/i
@@ -1232,8 +1299,9 @@ bot.dialog('SeeBillsForPastSixMonths', [
 // R.4.1.2 - menu|CommonlyAskedQuestion|MyDigiApp|PayForAnotherNumber
 bot.dialog('PayForAnotherNumber', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|MyDigiApp|PayForAnotherNumber';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|MyDigiApp|PayForAnotherNumber', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("You can follow the steps below");        
         var respCards = new builder.Message(session)
@@ -1264,7 +1332,8 @@ bot.dialog('PayForAnotherNumber', [
         builder.Prompts.choice(session, "", 'Main Menu', { listStyle: builder.ListStyle.button });  
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Pay For Another Number)/i
@@ -1273,8 +1342,9 @@ bot.dialog('PayForAnotherNumber', [
 // R.4.2 - menu|CommonlyAskedQuestion|TalkTimeServices
 bot.dialog('TalkTimeServices', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|TalkTimeServices';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|TalkTimeServices', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("Just Key in the question number to find out the answer. Example: 3");
         builder.Prompts.choice(session, "1. How to get my acc no", '1|Main Menu', { listStyle: builder.ListStyle.button });
@@ -1285,7 +1355,8 @@ bot.dialog('TalkTimeServices', [
             session.replaceDialog('TalkTimeTransfer');
             break;
         default:    // Next Page
-            session.replaceDialog('menu');
+            session.replaceDialog('getFeedback');
+//            session.replaceDialog('menu');
             break;
         }
     }
@@ -1296,8 +1367,9 @@ bot.dialog('TalkTimeServices', [
 // R.4.2.0 - menu|CommonlyAskedQuestion|TalkTimeServices|TalkTimeTransfer
 bot.dialog('TalkTimeTransfer', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|TalkTimeTransfer';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|TalkTimeTransfer', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("You can follow the steps below");        
         var respCards = new builder.Message(session)
@@ -1320,7 +1392,8 @@ bot.dialog('TalkTimeTransfer', [
         builder.Prompts.choice(session, "", 'Main Menu', { listStyle: builder.ListStyle.button });  
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Talk Time Transfer)/i
@@ -1329,8 +1402,9 @@ bot.dialog('TalkTimeTransfer', [
 // R.4.3 - menu|CommonlyAskedQuestion|ChargesOrBilling
 bot.dialog('ChargesOrBilling', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|ChargesOrBilling';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|ChargesOrBilling', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         session.send("Just Key in the question number to find out the answer. Example: 3");
         builder.Prompts.choice(session, "1. Will I be charged for calling 1300 / 1800 numbers?\
@@ -1349,7 +1423,8 @@ bot.dialog('ChargesOrBilling', [
             session.replaceDialog('ChangeBillingCycle');
             break;
         default:    // Next Page
-            session.replaceDialog('menu');
+            session.replaceDialog('getFeedback');
+//            session.replaceDialog('menu');
             break;
         }
     }
@@ -1360,13 +1435,15 @@ bot.dialog('ChargesOrBilling', [
 // R.4.3.0 - menu|CommonlyAskedQuestion|ChargesOrBilling|ChargeForCallingTollFree
 bot.dialog('ChargeForCallingTollFree', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|ChargesOrBilling|ChargeForCallingTollFree';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|ChargesOrBilling|ChargeForCallingTollFree', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         builder.Prompts.choice(session, "To be confirmed", 'Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Talk Time Services)/i
@@ -1375,8 +1452,9 @@ bot.dialog('ChargeForCallingTollFree', [
 // R.4.3.1 - menu|CommonlyAskedQuestion|ChargesOrBilling|ChargeForBuddyz
 bot.dialog('ChargeForBuddyz', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|ChargesOrBilling|ChargeForBuddyz';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|ChargesOrBilling|ChargeForBuddyz', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -1391,7 +1469,8 @@ bot.dialog('ChargeForBuddyz', [
         builder.Prompts.choice(session, respCards, "menu");
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Charge For Buddyz)/i
@@ -1400,13 +1479,15 @@ bot.dialog('ChargeForBuddyz', [
 // R.4.3.0 - menu|CommonlyAskedQuestion|ChargesOrBilling|ChangeBillingCycle
 bot.dialog('ChangeBillingCycle', [
     function (session) {
+        session.privateConversationData[LastMenu] = 'menu|CommonlyAskedQuestion|ChargesOrBilling|ChangeBillingCycle';
         var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('menu|CommonlyAskedQuestion|ChargesOrBilling|ChangeBillingCycle', telemetry);
+        appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
         
         builder.Prompts.choice(session, "To be confirmed", 'Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /(Change Billing Cycle)/i
@@ -1420,14 +1501,51 @@ bot.dialog('NLP', [
   
     },
     function (session) {
-        // Reload menu
-        session.replaceDialog('menu');
+        session.replaceDialog('getFeedback');
+//        session.replaceDialog('menu');
     }
 ]).triggerAction({
     matches: /^(Who)|(What)|(How)(I want)/i
 });
 
-// R.0 - menu|ComingSoon
+
+// R.5.3 - menu | FAQDialog | Prepaid
+bot.dialog('getFeedback', [
+    function (session) {
+        
+        if(session.privateConversationData[NumOfFeedback]>4)    // Get Feedback every 5th transaction
+        {
+            session.privateConversationData[NumOfFeedback] = 0;
+            builder.Prompts.choice(session, "We would appreciate your feedback\n Do you find our Virtual Assistant userful? ", 'Yes|No', { listStyle: builder.ListStyle.button });
+        } else {
+            session.privateConversationData[NumOfFeedback]++;
+            session.replaceDialog('menu');
+        }
+        
+    },
+    function (session, results) {
+        switch (results.response.index) {
+            case 0:
+                var telemetry = telemetryModule.createTelemetry(session);
+                appInsightsClient.trackEvent(session.privateConversationData[LastMenu]+'|Feedback Yes', telemetry);
+                session.send("LastMenu=" + session.privateConversationData[LastMenu]+'|Feedback Yes');
+
+                break;
+            case 1:
+                var telemetry = telemetryModule.createTelemetry(session);
+                appInsightsClient.trackEvent(session.privateConversationData[LastMenu]+'|Feedback No', telemetry);
+                session.send("LastMenu=" + session.privateConversationData[LastMenu]+'|Feedback No');
+
+                break;
+            default:
+                session.send("Sorry, I didn\'t quite get that.");
+                break;
+        }
+
+        session.send('Thank you for your feedback');
+        session.replaceDialog('menu');
+    }
+])
 
 
 
@@ -2078,36 +2196,7 @@ function getCardsPostpaidPlan(session) {
 }
 
 
-// R.5.3 - menu | FAQDialog | Prepaid
-bot.dialog('getFeedback', [
-    function (session) {
-        var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('Main|Feedback', telemetry);
 
-        builder.Prompts.choice(session, "We would appreciate your feedback\n Do you find our Virtual Assistant userful? ", 'Yes|No', { listStyle: builder.ListStyle.button });
-    },
-    function (session, results) {
-        switch (results.response.index) {
-            case 0:
-                var telemetry = telemetryModule.createTelemetry(session);
-                appInsightsClient.trackEvent('Main|Feedback Yes', telemetry);
-
-                break;
-            case 1:
-                var telemetry = telemetryModule.createTelemetry(session);
-                appInsightsClient.trackEvent('Main|Feedback No', telemetry);
-
-                break;
-            default:
-                session.send("Sorry, I didn\'t quite get that.");
-                break;
-        }
-
-
-        session.send('Thank you for your feedback');
-        session.replaceDialog('menu');
-    }
-])
 
 
 //////////////////////////////////////////////////////////////////////////////
