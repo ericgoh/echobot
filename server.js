@@ -81,8 +81,16 @@ bot.dialog('intro', [
         var telemetry = telemetryModule.createTelemetry(session);
         appInsightsClient.trackEvent(session.privateConversationData[LastMenu], telemetry);
 
+        session.send("Hello, I'm your friendly Digi Virtual Assistant and I'll be available from 9pm-12am");
+
+        var msg = new builder.Message(session)
+            .addAttachment({
+                contentUrl: 'https://digicsbot.azurewebsites.net/digiva.png.png',
+                contentType: 'image/png',
+                name: 'BotFrameworkOverview.png'
+            });
+        session.send(msg);
         
-        session.send("Hello, I'm your friendly Digi beta bot and I'll be available from 9pm-12am");
         session.replaceDialog('menu');
     }
 ]);
@@ -144,26 +152,26 @@ bot.dialog('Prepaid', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Malaysia\'s Best Prepaid Packs')
-                .subtitle('Prepaid Plans')
-                .images([ builder.CardImage.create(session, './images/Prepaid-Plans.PNG') ])
+                .subtitle('Prepaid Plans\n')
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Prepaid-Plans.PNG') ])
                 .buttons([
                     builder.CardAction.imBack(session, "Prepaid Plans", "More"),
                 ]),
 
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Add On')
                 .subtitle('Stay Connected')
-                .images([ builder.CardImage.create(session, './images/Prepaid-Addons.PNG') ])
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Prepaid-Addons.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/prepaid-addons', 'More')
                 ]),
                         
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Reload')
                 .subtitle('Top-up your credit now!')
-                .images([ builder.CardImage.create(session, './images/Prepaid-Reload.PNG') ])
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Prepaid-Reload.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/reload-details.ep', 'More')
                 ])
@@ -193,18 +201,18 @@ bot.dialog('PrepaidPlans', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Digi Prepaid Live')
                 .subtitle('Ultimate Video + Music Pack')
-                .images([ builder.CardImage.create(session, './images/Prepaid-Live.png') ])
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Prepaid-Live.png') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=20016&isBundle=n&ppymttype=PREPAID&ptype=VOICE&orderType=NL&_ga=1.167919842.2103412470.1490767162', 'Buy Now'),
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/prepaid/live', 'More Info')
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Digi Prepaid Best')
                 .subtitle('Unlimited Social Internet Pack')
-                .images([ builder.CardImage.create(session, './images/Prepaid-Best.png') ])
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Prepaid-Best.png') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=20015&isBundle=n&ppymttype=PREPAID&ptype=VOICE&orderType=NL&_ga=1.94994527.2103412470.1490767162', 'Buy Now'),
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/prepaid-plans', 'More Info')
@@ -234,18 +242,18 @@ bot.dialog('Postpaid', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Digi Postpaid')
                 .subtitle('The plans for you')
-                .images([ builder.CardImage.create(session, './images/Postpaid-Plans.PNG') ])
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Postpaid-Plans.PNG') ])
                 .buttons([
                     builder.CardAction.imBack(session, "Postpaid Plans", "More"),
                 ]),
 
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Extras')
                 .subtitle('All the extras you need to stay connected')
-                .images([ builder.CardImage.create(session, './images/Postpaid-Extra.PNG') ])
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Postpaid-Extra.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/postpaid-addons', 'More')
                 ])
@@ -273,36 +281,36 @@ bot.dialog('PostpaidPlans', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Digi Postpaid 150 Infinite')
-                .images([ builder.CardImage.create(session, './images/Postpaid-Infinite.PNG') ])
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Postpaid-Infinite.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=DGI150&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=NL&_ga=1.164776316.2103412470.1490767162', 'Buy Now'),
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=DGI150&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=MNP&_ga=1.164776316.2103412470.1490767162', 'Port In'),
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=DGI150&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=COP&_ga=1.238199557.426176229.1488446290', 'Change from Prepaid'),
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/services/change-of-mobile-plans?changePlanName=Digi%20Postpaid%20150%20Infinite', 'Change from Postpaid')
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Digi Postpaid 50')
-                .images([ builder.CardImage.create(session, './images/Postpaid-50.PNG') ])
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Postpaid-50.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10201VPA&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=NL&_ga=1.239507461.769883286.1492574194', 'Buy Now'),
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10201VPA&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=MNP&_ga=1.155287800.2103412470.1490767162', 'Port In'),
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10201VPA&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&_ga=1.64925487.1200425632.1479720347Postpaid&orderType=COP', 'Change from Prepaid'),
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/services/change-of-mobile-plans?changePlanName=Digi%20Postpaid%2050', 'Change from Postpaid')
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Digi Postpaid 80')
-                .images([ builder.CardImage.create(session, './images/Postpaid-80.PNG') ])
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Postpaid-80.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10200VP_EX&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=NL&_ga=1.65621101.2103412470.1490767162', 'Buy Now'),
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10200VP_EX&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=MNP&_ga=1.92479582.2103412470.1490767162', 'Port In'),
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10200VP_EX&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=COP', 'Change from Prepaid'),
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/services/change-of-mobile-plans?changePlanName=Digi%20Postpaid%2080', 'Change from Postpaid')
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Digi Postpaid 110')
-                .images([ builder.CardImage.create(session, './images/Postpaid-110.PNG') ])
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Postpaid-110.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10202VP_EX&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=NL&_ga=1.92479582.2103412470.1490767162', 'Buy Now'),
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=10202VP_EX&isBundle=y&ppymttype=POSTPAID&ptype=VOICE&orderType=MNP&_ga=1.94988767.2103412470.1490767162', 'Port In'),
@@ -334,13 +342,13 @@ bot.dialog('Broadband', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Digi Broadband')
                 .subtitle('Non stop entertainment')
                 .buttons([
                     builder.CardAction.imBack(session, "Broadband Plans", "More"),
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Running out of quota? ')
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://digi.my/mybb', 'More')
@@ -369,23 +377,26 @@ bot.dialog('BroadbandPlans', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Broadband 30')
                 .subtitle('For prepaid')
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Broadband-30.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=20017&isBundle=n&ppymttype=PREPAID&ptype=BB&_ga=1.55846120.2103412470.1490767162', 'Buy Now'),
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/broadband', 'More Info')
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Broadband 60')
                 .subtitle('For Postpaid')
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Broadband-60.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=90000P&isBundle=y&ppymttype=POSTPAID&ptype=BB&_ga=1.55846120.2103412470.1490767162', 'Buy Now'),
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/broadband', 'More Info')
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Broadband 100')
                 .subtitle('For Postpaid')
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Broadband-100.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'https://store.digi.com.my/storefront/product-config.ep?pID=90001P&isBundle=y&ppymttype=POSTPAID&ptype=BB&_ga=1.156903800.2103412470.1490767162', 'Buy Now'),
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/broadband', 'More Info')
@@ -415,33 +426,36 @@ bot.dialog('Roaming', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Roaming Plans')
                 .subtitle('Check out your roaming options')
                 .buttons([
                     builder.CardAction.imBack(session, "Roaming Plans", "More"),
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Roam by country? ')
                 .subtitle('Just let us know where you\'regoing')
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/roaming/international-roaming-rates', 'More')
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Roaming Tips')
                 .subtitle('Here\'s all your need to know to stay connected')
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Roaming-Tips.PNG') ])
                 .buttons([
                     builder.CardAction.imBack(session, "Roaming Tips", "More"),
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('IDD Rates')
                 .subtitle('International calls + SMS Rates')
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Roaming-Rates.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/roaming/international-calls-sms-rates', 'More')
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('IDD 133')
                 .subtitle('Enjoy the lowest IDD Rates to 36 countries')
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Roaming-133.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/roaming/idd-133', 'More')
                 ])
@@ -469,21 +483,24 @@ bot.dialog('RoamingPlans', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Roam Like Home')
                 .subtitle('The only postpaid plan you need to roam with')
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Roaming-LikeHome.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/roaming/roam-like-home-monthly', 'More')
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Roaming Pass')
                 .subtitle('Round the clock chatting & Surfing in 50 countries')
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Roaming-Pass.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/roaming/roaming-pass', 'More')
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Unlimited Internet')
                 .subtitle('Enjoy a hassle free roaming experience')
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Roaming-UnlimitedInternet.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/roaming/unlimited-internet', 'More')
                 ]),
@@ -511,25 +528,25 @@ bot.dialog('RoamingTips', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Activate Roaming Services')
                 .subtitle('How long are you with Digi?')
                 .buttons([
                     builder.CardAction.imBack(session, "Activate Roaming Over 6 Months", "More"),
                     builder.CardAction.imBack(session, "Activate Roaming Below 6 Months", "Less")
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Turn on/off data roaming')
                 .buttons([
                     builder.CardAction.imBack(session, "iOS Data Roaming", "iOS"),
                     builder.CardAction.imBack(session, "Android Data Roaming", "Android")
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Purchase / subscribe to Roam Plass')
                 .buttons([
                     builder.CardAction.imBack(session, "Subscribe Roaming Pass", "More")
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Usage Checking')
                 .buttons([
                     builder.CardAction.imBack(session, "MyDigi Check Roam Usage", "MyDigi"),
@@ -557,7 +574,7 @@ bot.dialog('ActivateRoamingOver6Months', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Self-activate at MyDigi: ')
                 .subtitle('Go to Plan Settings > \
                         \n My Subscription >\
@@ -585,7 +602,7 @@ bot.dialog('ActivateRoamingBelow6Months', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Self-activate at MyDigi: ')
                 .subtitle('Please provide us with \
                         \n i) Photocopy of NRIC \
@@ -613,7 +630,7 @@ bot.dialog('iOSDataRoaming', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('iOS Turn on/off data roaming')
                 .subtitle('Go to Settings > Mobile Data > \
                         \n Mobile Data Options > \
@@ -640,7 +657,7 @@ bot.dialog('AndroidDataRoaming', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Android Turn on/off data roaming')
                 .subtitle('Go to Settings > Mobile networks > slide the "Data Roaming" ON/OFF')
             ]);
@@ -668,19 +685,19 @@ bot.dialog('SubscribeRoamingPass', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 1')
                 .subtitle('Dial *128*5*1*6#'),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 2')
                 .subtitle('Press "2" to "Purchase Roaming Top Up"'),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 3')
                 .subtitle('You\'ll receive a confirmation SMS to notify you of successful Roaming Pass purchase'),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 4')
                 .subtitle('Manually select the specified/applicable network operator'),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 5')
                 .subtitle('Turn on Data Roaming or Cellular Data/Mobile Data on your mobile phone')
             ]);
@@ -705,13 +722,13 @@ bot.dialog('MyDigiCheckRoamUsage', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 1')
                 .subtitle('On usage page, select "View Details"'),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 2')
                 .subtitle('Select "Internet" for Internet quota balance'),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 3')
                 .subtitle('Select "Voice" for Voice minutes balance')
             ]);
@@ -737,13 +754,13 @@ bot.dialog('UmbCheckRoamUsage', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 1')
                 .subtitle('In UMB: Dial *128*5*1*6#'),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 2')
                 .subtitle('Select 3 for voice minutes balance'),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 3')
                 .subtitle('View your balance')
             ]);
@@ -771,28 +788,28 @@ bot.dialog('CommonlyAskedQuestion', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('All About My Account')
                 .subtitle('We have the answers to the most asked questions on managing your account')
                 .buttons([
                     builder.CardAction.imBack(session, "About My Account", "More"),
                 ]),
 
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('MyDigi App')
                 .subtitle('An app to manage all your account needs. Find out how to use it')
                 .buttons([
                     builder.CardAction.imBack(session, "MyDigi App", "More"),
                 ]),
                         
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Talk Time Services')
                 .subtitle('Find out how to request from or give prepaid credit to others')
                 .buttons([
                     builder.CardAction.imBack(session, "Talk Time Services", "More"),
                 ]),
 
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Charges / Billing')
                 .subtitle('Got questions on your bills? Maybe we can help')
                 .buttons([
@@ -889,15 +906,15 @@ bot.dialog('WhatIsMyPuk', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 1')
                 .subtitle('On the MyDigi app, click on Menu'),
 
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 2')
                 .subtitle('Click on Settings'),
                         
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 3')
                 .subtitle('Swipe left to select SIM and you will find your PUK code')
             ]);
@@ -942,15 +959,15 @@ bot.dialog('CheckFnF', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 1')
                 .subtitle('On the MyDigi app, click on Menu'),
 
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 2')
                 .subtitle('Click on Settings'),
                         
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 3')
                 .subtitle('Swipe left to select \'Family & Friends\' to view your list')
             ]);
@@ -1046,7 +1063,7 @@ bot.dialog('HowToActivateVolte', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .subtitle('Please check if your device is compatible and the instructions for activation can be found here')
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/services/volte', 'Check'),
@@ -1082,23 +1099,23 @@ bot.dialog('ActivateVolte', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 1')
                 .subtitle('Select \"Settings\"'),
 
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 2')
                 .subtitle('Select \"Mobile Data\"'),
                         
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 3')
                 .subtitle('Tap on Mobile Data Options'),
                     
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 4')
                 .subtitle('Select \"Enable 4G\"'),
 
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 5')
                 .subtitle('Choose Voice & Data to enable VoLTE')
             ]);
@@ -1125,14 +1142,14 @@ bot.dialog('HowToPortIn', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Digi Website')
                 .subtitle('Checkout our plans on Digi Website and once you\'ve found the right plan, select Port-in to proceed')
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/prepaid-plans', 'Prepaid'),
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/postpaid-plans', 'Postpaid')
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Digi Store')
                 .subtitle('Just drop by the nearest Digi Store and we will take care of the rest for you')
                 .buttons([
@@ -1194,13 +1211,13 @@ bot.dialog('GetStartedMyDigi', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 1')
                 .subtitle('Checkout our plans on Digi Website and once you\'ve found the right plan, select Port-in to proceed')
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://appurl.io/j1801ncp', 'Download MyDigi'),
                 ]),
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 2')
                 .subtitle('Sign in to the app using a Connect ID or proceed with your number. Make sure to turn on your data or this may not work!')                
             ]);
@@ -1226,11 +1243,11 @@ bot.dialog('DownloadBillFrMyDigi', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 1')
                 .subtitle('Click on View Details'),
 
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 2')
                 .subtitle('Click on \'Download Bills\' just below the total charges'),
             ]);
@@ -1264,23 +1281,23 @@ bot.dialog('SeeBillsForPastSixMonths', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 1')
                 .subtitle('Click on the Menu Button'),
 
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 2')
                 .subtitle('Click on Bills'),
                         
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 3')
                 .subtitle('Click on \'More\' icon at the top right corner'),
                     
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 4')
                 .subtitle('Click on \'Previous Bills\''),
 
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 5')
                 .subtitle('You can view & download your bills for the last 6 months')
             ]);
@@ -1307,23 +1324,23 @@ bot.dialog('PayForAnotherNumber', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 1')
                 .subtitle('Click on the Menu Button'),
 
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 2')
                 .subtitle('Click on Digi Shares'),
                         
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 3')
                 .subtitle('Click on Add a number to share'),
                     
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 4')
                 .subtitle('Enter the Name and Mobile Number. Then click on Save'),
 
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 5')
                 .subtitle('Select the name of the person you would like to make payment for, key in the amount and email address. Then click on Pay Bill')
             ]);
@@ -1375,15 +1392,15 @@ bot.dialog('TalkTimeTransfer', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 1')
                 .subtitle('Dial *128# from your Digi mobile, then select My Account. From the menu, select Talktime Service'),
 
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 2')
                 .subtitle('Reply 1 to select Talktime Transfer, and then choose a transfer option. Key in the Digi mobile number you wish to send Prepaid credit to and select CALL/SEND'),
                         
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .title('Step 3')
                 .subtitle('You will receive a confirmation text message upon successful transaction')
             ]);
@@ -1459,7 +1476,7 @@ bot.dialog('ChargeForBuddyz', [
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                 .subtitle('You can register your first three (3) Buddyz (Digi numbers), free of charge and each change after that will be charged RM10')
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/Page/tnc/default/tnc_buddyz', 'More Details'),
@@ -2224,7 +2241,9 @@ bot.dialog('/ref', [
         // The menu runs a loop until the user chooses to (quit).
         session.replaceDialog('/menu');
     }
-]).reloadAction('reloadMenu', null, { matches: /^menu|show menu/i });
+]).triggerAction({
+    matches: /(referencemenu)/i
+});
 
 bot.dialog('/help', [
     function (session) {
