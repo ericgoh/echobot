@@ -85,7 +85,7 @@ bot.dialog('intro', [
 
         var msg = new builder.Message(session)
             .addAttachment({
-                contentUrl: 'https://digicsbot.azurewebsites.net/digiva.png.png',
+                contentUrl: 'https://digicsbot.azurewebsites.net/digiva.png',
                 contentType: 'image/png',
                 name: 'BotFrameworkOverview.png'
             });
