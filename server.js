@@ -117,7 +117,7 @@ bot.dialog('intro', [
 
         var msg = new builder.Message(session)
             .addAttachment({
-                contentUrl: 'https://digicsbot.azurewebsites.net/digiva.png',
+                contentUrl: 'https://digicsbot.azurewebsites.net/digi-telecommunications.png',
                 contentType: 'image/png',
                 name: 'BotFrameworkOverview.png'
             });
