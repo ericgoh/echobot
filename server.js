@@ -103,7 +103,6 @@ function trackBotEvent(session, description, storeLastMenu) {
 
     if(storeLastMenu==undefined) {
         session.privateConversationData[LastMenu] = description;
-        session.send("storelastmenu="+description);
     }
 //  Remove after confirm logging is successful
 //    var telemetry = telemetryModule.createTelemetry(session);
