@@ -144,6 +144,30 @@ bot.dialog('menu', [
     matches: /^(menu)|(exit)|(quit)|(depart)|(bye)|(goodbye)|(begin)/i
 });
 
+bot.dialog('Feedback', [
+    function (session) {
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.HeroCard(session)
+                .title('Feedback Form (Internal Testing use only)')
+                .subtitle('Thanks for your participation. We would appreciate your feedback')
+                .buttons([
+                    builder.CardAction.openUrl(session, 'https://goo.gl/forms/giIkIYVHLxL8l2ob2', 'My Feedback')
+                ])
+            ]);
+        session.send(respCards);
+        
+        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.replaceDialog('menu');
+    },
+]).triggerAction({
+    matches: /(Feedback)/i
+});
+
+
 // R - menu
 bot.dialog('menu2', [
     function (session) {        
