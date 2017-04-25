@@ -66,9 +66,15 @@ bot.on('conversationUpdate', function (message) {
     if (message.membersAdded) {
         message.membersAdded.forEach(function (identity) {
             if (identity.id === message.address.bot.id) {
-                console.log("idenetity")
+                console.log("idenetity Added " + identity.id + " Message " + message.address.bot.id + " " + message.address.conversation.id);
                 bot.beginDialog(message.address, 'intro');
             }
+        });
+    }
+    if (message.membersRemoved){
+        console.log("idenetity Removed " + identity.id + " Message " + message.address.bot.id + " " + message.address.conversation.id);
+        message.membersRemoved.forEach(function (identity) {
+            console.log("idenetity Removed " + identity.id + " Message " + message.address.bot.id + " " + message.address.conversation.id);
         });
     }
 });
@@ -142,7 +148,7 @@ bot.dialog('menu', [
 bot.dialog('menu2', [
     function (session) {        
         trackBotEvent(session, 'menu');
-
+        
         builder.Prompts.choice(session, "To get started, these are the things I can help you with. Just click on any of the below and let's get started.", 'Prepaid|Postpaid|Broadband|Roaming|Commonly Asked Question', { listStyle:builder.ListStyle.button, maxRetries:MaxRetries, retryPrompt:DefaultErrorPrompt});
     },
     function (session, results) {
@@ -719,13 +725,16 @@ bot.dialog('MyDigiCheckRoamUsage', [
             .attachments([
                 new builder.HeroCard(session)
                 .title('Step 1')
-                .subtitle('On usage page, select "View Details"'),
+                .subtitle('On usage page, select "View Details"')
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Roaming-MyDigi-Step1.png') ]),
                 new builder.HeroCard(session)
                 .title('Step 2')
-                .subtitle('Select "Internet" for Internet quota balance'),
+                .subtitle('Select "Internet" for Internet quota balance')
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Roaming-MyDigi-Step2.png') ]),
                 new builder.HeroCard(session)
                 .title('Step 3')
                 .subtitle('Select "Voice" for Voice minutes balance')
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Roaming-MyDigi-Step3.png') ])
             ]);
         session.send(respCards);        
         builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
@@ -747,12 +756,15 @@ bot.dialog('UmbCheckRoamUsage', [
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
                 new builder.HeroCard(session)
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Roaming-UMB-Step1.png') ])
                 .title('Step 1')
                 .subtitle('In UMB: Dial *128*5*1*6#'),
                 new builder.HeroCard(session)
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Roaming-UMB-Step2.png') ])
                 .title('Step 2')
                 .subtitle('Select 3 for voice minutes balance'),
                 new builder.HeroCard(session)
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Roaming-UMB-Step3.png') ])
                 .title('Step 3')
                 .subtitle('View your balance')
             ]);
@@ -2457,4 +2469,5 @@ server.get(/.*/, restify.serveStatic({
 
 server.listen(process.env.port || 3978, function () {
     console.log('%s listening to %s', server.name, server.url); 
+    console.log("date = ",Date.now());
 });
