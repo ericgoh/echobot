@@ -17,13 +17,14 @@ var builder = require('botbuilder');
 var RestClient = require('node-rest-client').Client;
 var restclient = new RestClient();
 var math = require('mathjs');
+var request = require("request");
 
 
-// Initialize Telemetry Modules
-var telemetryModule = require('./telemetry-module.js'); // Setup for Application Insights
-var appInsights = require('applicationinsights');
-appInsights.setup(process.env.APPINSIGHTS_INSTRUMENTATIONKEY).start();
-var appInsightsClient = appInsights.getClient();
+//// Initialize Telemetry Modules - remove after confirm logging is successful
+//var telemetryModule = require('./telemetry-module.js'); // Setup for Application Insights
+//var appInsights = require('applicationinsights');
+//appInsights.setup(process.env.APPINSIGHTS_INSTRUMENTATIONKEY).start();
+//var appInsightsClient = appInsights.getClient();
 
 
 // Get secrets from server environment
@@ -57,7 +58,7 @@ bot.library(require('./validators').createLibrary());
 ////////////////////////////////////////////////////////////////////////////
 // Global Variables
 var MaxRetries = 2; 
-var DefaultErrorPrompt = "Sorry, I don't really Understand. Can you repeat?"
+var DefaultErrorPrompt = "Oops, I didn't get that. Click on any of the below for further information."
 
 
 
@@ -80,7 +81,7 @@ bot.on('conversationUpdate', function (message) {
 });
 
 // Wrapper function to use telemetry & logging
-function trackBotEvent(session, description) {
+function trackBotEvent(session, description, storeLastMenu) {
     // log session.message.address to identify user 
     //var address = JSON.stringify(session.message.address); session.send("User Address=" + address);
     //
@@ -100,9 +101,41 @@ function trackBotEvent(session, description) {
     //”bot”:{“id”:”default-bot”,”name”:”Bot”},
     //”serviceUrl”:”http://localhost:59711","useAuth":false}    
 
-    session.privateConversationData[LastMenu] = description;
-    var telemetry = telemetryModule.createTelemetry(session);
-    appInsightsClient.trackEvent(session.privateConversationData[LastMenu], session.message.address.conversation.id);
+    if(storeLastMenu==undefined) {
+        session.privateConversationData[LastMenu] = description;
+        session.send("storelastmenu="+description);
+    }
+//  Remove after confirm logging is successful
+//    var telemetry = telemetryModule.createTelemetry(session);
+//    appInsightsClient.trackEvent(session.privateConversationData[LastMenu], session.message.address.conversation.id);
+
+
+    // @*)(*!)@(*#!@ ) why get local date also need 3 lines of text !)(@*#)(!@*#)()
+    var d = new Date();
+    var offset = (new Date().getTimezoneOffset() / 60) * -1;
+    var nowtime = new Date(d.getTime() + offset).toISOString().replace(/T/, ' ').replace(/\..+/, '');
+    
+    var options = {
+        method: 'POST',
+        url: 'https://digibid.azurewebsites.net/action.ashx',
+        qs: {       action: 'json' },
+        headers: {  'content-type': 'multipart/form-data'   },
+        formData: { 
+            data: '{\
+                    "command": "update_chat_log",\
+                    "auth_key": "a6hea2",\
+                    "chat_id": "'+session.message.address.conversation.id+'",\
+                    "chat_log": "'+session.privateConversationData[LastMenu]+'",\
+                    "chat_on": "' + nowtime + '"}'
+        }   
+    };
+    try{
+        request(options, function (error, response, body) {
+//            console.log(body);
+        })
+    } catch (e) {
+//        console.log("cannot log");
+    }
 }
 
 // R - menu
@@ -158,7 +191,7 @@ bot.dialog('Feedback', [
             ]);
         session.send(respCards);
         
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -198,7 +231,7 @@ bot.dialog('menu2', [
             }
         } catch (e) {
             // After max retries, will come here
-            session.send("Sorry I messed up, let's try again");
+            session.send("Ops I messed up, let's start over again");
             session.replaceDialog('menu2');
         }
     },
@@ -246,7 +279,7 @@ bot.dialog('Prepaid', [
             ]);
         session.send(respCards);
         
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -283,7 +316,7 @@ bot.dialog('PrepaidPlans', [
                 ])
             ]);
         session.send(respCards);        
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -320,7 +353,7 @@ bot.dialog('Postpaid', [
                 ])
             ]);
         session.send(respCards);
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -377,7 +410,7 @@ bot.dialog('PostpaidPlans', [
                 ])
             ]);
         session.send(respCards);        
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -410,7 +443,7 @@ bot.dialog('Broadband', [
                 ])
             ]);
         session.send(respCards);
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -455,7 +488,7 @@ bot.dialog('BroadbandPlans', [
                 ]),
             ]);
         session.send(respCards);        
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -510,7 +543,7 @@ bot.dialog('Roaming', [
                 ])
             ]);
         session.send(respCards);
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -552,7 +585,7 @@ bot.dialog('RoamingPlans', [
                 ]),
             ]);
         session.send(respCards);
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -597,7 +630,7 @@ bot.dialog('RoamingTips', [
                 ])
             ]);
         session.send(respCards);        
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -622,7 +655,7 @@ bot.dialog('ActivateRoamingOver6Months', [
                         \n click \"Subscribe\" >')
             ]);
         session.send(respCards);        
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -647,7 +680,7 @@ bot.dialog('ActivateRoamingBelow6Months', [
                         \n iii) Work permit (for non-Malaysian)')
             ]);
         session.send(respCards);        
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -671,7 +704,7 @@ bot.dialog('iOSDataRoaming', [
                         \nslide the \"Data Roaming\" ON/OFF')
             ]);
         session.send(respCards);        
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -693,7 +726,7 @@ bot.dialog('AndroidDataRoaming', [
                 .subtitle('Go to Settings > Mobile networks > slide the "Data Roaming" ON/OFF')
             ]);
         session.send(respCards);        
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -730,7 +763,7 @@ bot.dialog('SubscribeRoamingPass', [
                 .subtitle('Turn on Data Roaming or Cellular Data/Mobile Data on your mobile phone')
             ]);
         session.send(respCards);        
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -761,7 +794,7 @@ bot.dialog('MyDigiCheckRoamUsage', [
                 .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Roaming-MyDigi-Step3.png') ])
             ]);
         session.send(respCards);        
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -793,7 +826,7 @@ bot.dialog('UmbCheckRoamUsage', [
                 .subtitle('View your balance')
             ]);
         session.send(respCards);        
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -808,7 +841,7 @@ bot.dialog('CommonlyAskedQuestion', [
     function (session) {
         trackBotEvent(session, 'menu|CommonlyAskedQuestion');
         
-        session.send("There's a few ways to go about it");
+        session.send("What would you like to find out today?");
         
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -843,7 +876,7 @@ bot.dialog('CommonlyAskedQuestion', [
             ]);
         session.send(respCards);
         
-        builder.Prompts.choice(session, "", "Menu", { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", "Main Menu", { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -950,8 +983,7 @@ bot.dialog('ChangeMyAccOwnership', [
     function (session) {
         trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|ChangeMyAccOwnership');
         
-        session.send("Please visit the nearest Digi Store to change ownership of account. Both parties must be present together with NRICs for validation");
-        builder.Prompts.choice(session, "", 'Main Menu', { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "Please visit the nearest Digi Store to change ownership of account. Both parties must be present together with NRICs for validation", 'Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -1069,7 +1101,7 @@ bot.dialog('HowToActivateVolte', [
                     builder.CardAction.imBack(session, "menu", "Main Menu")
                 ])
             ]);
-        builder.Prompts.choice(session, respCards, "Activation|menu");
+        builder.Prompts.choice(session, respCards, "Activation|Main Menu");
     },
     function (session, results) {
         switch (results.response.index) {
@@ -1235,7 +1267,7 @@ bot.dialog('DownloadBillFrMyDigi', [
                 .subtitle('Click on \'Download Bills\' just below the total charges'),
             ]);
         session.send(respCards);        
-        builder.Prompts.choice(session, "", 'See bills for past 6 months|menu', { listStyle: builder.ListStyle.button });  
+        builder.Prompts.choice(session, "", 'See bills for past 6 months|Main Menu', { listStyle: builder.ListStyle.button });  
     },
     function (session, results) {
         switch (results.response.index) {
@@ -1471,9 +1503,7 @@ bot.dialog('ChangeBillingCycle', [
 bot.dialog('NLP', [
 // R - menu
     function (session) {
-        var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('NLP', telemetry);
-  
+        trackBotEvent(session, 'NLP');  
     },
     function (session) {
         session.replaceDialog('menu');
@@ -1491,12 +1521,10 @@ bot.dialog('getFeedback', [
     function (session, results) {
         switch (results.response.index) {
             case 0:
-                var telemetry = telemetryModule.createTelemetry(session);
-                appInsightsClient.trackEvent(session.privateConversationData[LastMenu]+'|Feedback Yes', telemetry);
+                trackBotEvent(session,session.privateConversationData[LastMenu]+'|Feedback Yes',0);
                 break;
             case 1:
-                var telemetry = telemetryModule.createTelemetry(session);
-                appInsightsClient.trackEvent(session.privateConversationData[LastMenu]+'|Feedback No', telemetry);
+                trackBotEvent(session,session.privateConversationData[LastMenu]+'|Feedback No',0);
                 break;
             default:
                 session.send("Sorry, I didn\'t quite get that.");
@@ -1515,8 +1543,7 @@ bot.dialog('getFeedback', [
 // R.1 - menu | PrepaidDialog
 bot.dialog('PrepaidDialog', [
     function (session) {
-        var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('Main|Prepaid', telemetry);
+        trackBotEvent(session, 'Main|Prepaid');
         
         builder.Prompts.choice(session, "Here are some things that I can help you with", 'Plan Recommendation|Prepaid Plans|Promotions|Internet Plans|My Account', { listStyle: builder.ListStyle.button });
     },
@@ -1554,8 +1581,7 @@ bot.dialog('PrepaidDialog', [
 // R.0.0 - menu | PrepaidDialog | PrepaidRecommendationQ1 
 bot.dialog('PrepaidRecommendationQ1', [
     function (session) {
-        var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('Main|Prepaid|PrepaidRecommendationQ1', telemetry);
+        trackBotEvent(session, 'Main|Prepaid|PrepaidRecommendationQ1');
         
         builder.Prompts.choice(session, "Do you use a lot of voice calls?", 'Yes|No', { listStyle: builder.ListStyle.button });
     },
@@ -1579,8 +1605,7 @@ bot.dialog('PrepaidRecommendationQ1', [
 // R.0.0.1 - menu | PrepaidDialog | PrepaidRecommendationQ1 | PrepaidRecommendationQ2
 bot.dialog('PrepaidRecommendationQ2', [
     function (session) {
-        var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('Main|Prepaid|PrepaidRecommendationQ2', telemetry);
+        trackBotEvent(session, 'Main|Prepaid|PrepaidRecommendationQ2');
 
         builder.Prompts.choice(session, "I see.  What do you usually use your data for?", 'Social Media|Music/Videos|Data is Life!|I don\'t really use data', { listStyle: builder.ListStyle.button });
     },
@@ -1732,8 +1757,7 @@ bot.dialog('PrepaidAccountOverview', [
 // R.1 - menu | PostpaidDialog
 bot.dialog('PostpaidDialog', [
     function (session) {
-        var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('Main|Postpaid', telemetry);
+        trackBotEvent(session, 'Main|Postpaid');
 
         builder.Prompts.choice(session, "Here are some things that I can help you with", 'Postpaid Plans|Promotions|Internet Plans|My Account|FAQ', { listStyle: builder.ListStyle.button });
     },
@@ -1765,8 +1789,7 @@ bot.dialog('PostpaidDialog', [
 // R.4 - menu | DownloadMyDigi
 bot.dialog('DownloadMyDigi', [
     function (session) {
-        var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('Main|DownloadMyDigi', telemetry);
+        trackBotEvent(session, 'Main|DownloadMyDigi');
                 
         var downloadMyDigiCard = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -1794,8 +1817,7 @@ bot.dialog('DownloadMyDigi', [
 // R.5 - menu | FAQDialog
 bot.dialog('FaqDialog', [
     function (session) {
-        var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('Main|FAQ', telemetry);
+        trackBotEvent(session, 'Main|FAQ');
 
         builder.Prompts.choice(session, "Soemthing to begin with", 'General|Postpaid|Broadband|Prepaid|Roaming', { listStyle: builder.ListStyle.button });
     },
@@ -1831,8 +1853,7 @@ bot.dialog('FaqDialog', [
 // R.5.0 - menu | FAQDialog | FaqGeneral
 bot.dialog('FaqGeneral', [
     function (session) {
-        var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('Main|FAQ|General', telemetry);
+        trackBotEvent(session, 'Main|FAQ|General');
 
         var msg = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -1986,8 +2007,7 @@ bot.dialog('FaqGeneral', [
 // R.5.1 - menu | FAQDialog | FaqPostpaid
 bot.dialog('FaqPostpaid', [
     function (session) {
-        var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('Main|FAQ|Postpaid', telemetry);
+        trackBotEvent(session, 'Main|FAQ|Postpaid');
 
         var msg = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -2043,8 +2063,7 @@ bot.dialog('FaqPostpaid', [
 // R.5.2 - menu | FAQDialog | FaqBroadband
 bot.dialog('FaqBroadband', [
     function (session) {
-        var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('Main|FAQ|Broadband', telemetry);
+        trackBotEvent(session, 'Main|FAQ|Broadband');
         
         var msg = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -2082,8 +2101,7 @@ bot.dialog('FaqBroadband', [
 // R.5.3 - menu | FAQDialog | Prepaid
 bot.dialog('FaqPrepaid', [
     function (session) {
-        var telemetry = telemetryModule.createTelemetry(session);
-        appInsightsClient.trackEvent('Main|FAQ|Prepaid', telemetry);
+        trackBotEvent(session, 'Main|FAQ|Prepaid');
         
         var msg = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -2493,5 +2511,6 @@ server.get(/.*/, restify.serveStatic({
 
 server.listen(process.env.port || 3978, function () {
     console.log('%s listening to %s', server.name, server.url); 
-    console.log("date = ",Date.now());
+
 });
+
