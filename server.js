@@ -36,7 +36,8 @@ var botConnectorOptions = {
 // Session Data
 var LastMenu = 'LastMenu';
 var NumOfFeedback = 'NumOfFeedback';
-
+var DialogId = 'DialogId';
+var DialogState = 'DialogState';
 
 // Create bot
 var connector = new builder.ChatConnector(botConnectorOptions);
@@ -81,7 +82,7 @@ bot.on('conversationUpdate', function (message) {
 });
 
 // Wrapper function to use telemetry & logging
-function trackBotEvent(session, description, storeLastMenu) {
+function trackBotEvent(session, description, dialog_state, storeLastMenu) {
     // log session.message.address to identify user 
     //var address = JSON.stringify(session.message.address); session.send("User Address=" + address);
     //
@@ -108,14 +109,20 @@ function trackBotEvent(session, description, storeLastMenu) {
 //    var telemetry = telemetryModule.createTelemetry(session);
 //    appInsightsClient.trackEvent(session.privateConversationData[LastMenu], session.message.address.conversation.id);
 
-// dialog_state     1:end conversation
-// dialog_state     0:start / middle of conversation
-// dialog_type
-
+// Logging to Database
+//{"command": "update_chat_log",
+//"auth_key": "a6hea2",
+//"chat_id": "abcde12345",
+//"dialog_id":"ateer",
+//"dialog_state":"1",   1:mid/end conversation,  0:start conversation
+//"dialog_type":"text", "Email" / "Phone Num" / etc
+//"dialog_input":"",    "
+//"chat_log": "menu|prepaid"}
+    
     // @*)(*!)@(*#!@ ) why get local date also need 3 lines of text !)(@*#)(!@*#)()
-    var d = new Date();
-    var offset = (new Date().getTimezoneOffset() / 60) * -1;
-    var nowtime = new Date(d.getTime() + offset).toISOString().replace(/T/, ' ').replace(/\..+/, '');
+//    var d = new Date();
+//    var offset = (new Date().getTimezoneOffset() / 60) * -1;
+//    var nowtime = new Date(d.getTime() + offset).toISOString().replace(/T/, ' ').replace(/\..+/, '');
     
     var options = {
         method: 'POST',
@@ -124,15 +131,17 @@ function trackBotEvent(session, description, storeLastMenu) {
         headers: {  'content-type': 'multipart/form-data'   },
         formData: { 
             data: '{\
-                    "command": "update_chat_log",\
-                    "auth_key": "a6hea2",\
-                    "chat_id": "'+session.message.address.conversation.id+'",\
-                    "dialog_id": "'+session.message.address.id+'",\
-                    "dialog_state":"0",\
-                    "dialog_input":"",\
-                    "chat_log": "'+session.privateConversationData[LastMenu]+'"}'
+"command": "update_chat_log",\
+"auth_key": "a6hea2",\
+"chat_id": "'+session.message.address.conversation.id+'",\
+"dialog_id": "'+session.privateConversationData[DialogId]+'",\
+"dialog_state":' + dialog_state + '",\
+"dialog_type":"",\
+"dialog_input":"",\
+"chat_log": "'+session.privateConversationData[LastMenu]+'"}'
         }   
     };
+    console.log("Logging : " + options.formData.data);
     try{
         request(options, function (error, response, body) {
 //            console.log(body);
@@ -147,11 +156,10 @@ bot.dialog('intro', [
     function (session) {
         // Initialize Session Data
         session.privateConversationData[NumOfFeedback] = 0;
-        trackBotEvent(session, 'intro');
+        trackBotEvent(session, 'intro', 0);
 
-        session.send("Hello, I'm your friendly Digi Virtual Assistant and I'll be available from 9pm-12am");
+        session.send(emoji.emojify("Hello, I'm your friendly Digi Virtual Assistant and I'll be available from 9pm-12am :heart:"));
         
-
         var msg = new builder.Message(session)
             .addAttachment({
                 contentUrl: 'https://digicsbot.azurewebsites.net/digi-telecommunications.png',
@@ -168,7 +176,7 @@ bot.dialog('intro', [
 bot.dialog('menu', [
     function (session) {
         
-        if(session.privateConversationData[NumOfFeedback]>2)    // Get Feedback every 5th transaction
+        if(session.privateConversationData[NumOfFeedback]>2)    // Get Feedback every 2nd transaction
         {
             session.privateConversationData[NumOfFeedback] = 0;
             session.replaceDialog('getFeedback');
@@ -207,10 +215,13 @@ bot.dialog('Feedback', [
 
 // R - menu
 bot.dialog('menu2', [
-    function (session) {        
-        trackBotEvent(session, 'menu');
+    function (session) {
+        trackBotEvent(session, 'menu', 0);
+        
+        // Store new unique ID for this conversation's Dialog
+        session.privateConversationData[DialogId] = session.message.address.id;
 
-        builder.Prompts.choice(session, "To get started, these are the things I can help you with. Just click on any of the below and let's get started.", emoji.emojify('Prepaid|Postpaid|Broadband|Roaming|:heart:Commonly Asked Question'), { listStyle:builder.ListStyle.button, maxRetries:MaxRetries, retryPrompt:DefaultErrorPrompt});
+        builder.Prompts.choice(session, "To get started, these are the things I can help you with. Just click on any of the below and let's get started.", 'Prepaid|Postpaid|Broadband|Roaming|Commonly Asked Question', { listStyle:builder.ListStyle.button, maxRetries:MaxRetries, retryPrompt:DefaultErrorPrompt});
     },
     function (session, results) {
         try {
@@ -249,7 +260,7 @@ bot.dialog('menu2', [
 // R.0 - menu|Prepaid
 bot.dialog('Prepaid', [
     function (session) {
-        trackBotEvent(session, 'menu|Prepaid');
+        trackBotEvent(session, 'menu|Prepaid',1);
         
         session.send("What would you like to find out today?");
         
@@ -295,7 +306,7 @@ bot.dialog('Prepaid', [
 // R.0.0 - menu|Prepaid|PrepaidPlans
 bot.dialog('PrepaidPlans', [
     function (session) {
-        trackBotEvent(session, 'menu|Prepaid|PrepaidPlans');
+        trackBotEvent(session, 'menu|Prepaid|PrepaidPlans',1);
 
         session.send("Here are our plans");
         
@@ -333,7 +344,7 @@ bot.dialog('PrepaidPlans', [
 // R.1 - menu|Postpaid
 bot.dialog('Postpaid', [
     function (session) {
-        trackBotEvent(session, 'menu|Postpaid');
+        trackBotEvent(session, 'menu|Postpaid',1);
         
         session.send("What would you like to find out today?");
         
@@ -369,7 +380,7 @@ bot.dialog('Postpaid', [
 // R.1.0 - menu|Postpaid|PostpaidPlans
 bot.dialog('PostpaidPlans', [
     function (session) {
-        trackBotEvent(session, 'menu|Postpaid|PostpaidPlans');
+        trackBotEvent(session, 'menu|Postpaid|PostpaidPlans',1);
 
         session.send("Here are our plans");
         
@@ -427,7 +438,7 @@ bot.dialog('PostpaidPlans', [
 // R.2 - menu|Broadband
 bot.dialog('Broadband', [
     function (session) {
-        trackBotEvent(session, 'menu|Broadband');
+        trackBotEvent(session, 'menu|Broadband',1);
         
         session.send("What would you like to find out today?");
         
@@ -460,7 +471,7 @@ bot.dialog('Broadband', [
 // R.1.0 - menu|Broadband|BroadbandPlans
 bot.dialog('BroadbandPlans', [
     function (session) {
-        trackBotEvent(session, 'menu|Broadband|BroadbandPlans');
+        trackBotEvent(session, 'menu|Broadband|BroadbandPlans',1);
 
         session.send("Here are our plans");
         
@@ -506,7 +517,7 @@ bot.dialog('BroadbandPlans', [
 // R.3 - menu|Roaming
 bot.dialog('Roaming', [
     function (session) {
-        trackBotEvent(session, 'menu|Roaming');
+        trackBotEvent(session, 'menu|Roaming',1);
         
         session.send("What would you like to find out today?");
         
@@ -562,7 +573,7 @@ bot.dialog('Roaming', [
 // R.3.0 - menu|Roaming|RoamingPlans
 bot.dialog('RoamingPlans', [
     function (session) {
-        trackBotEvent(session, 'menu|Roaming|RoamingPlans');
+        trackBotEvent(session, 'menu|Roaming|RoamingPlans',1);
 
         session.send("You can roam with the following");
         
@@ -604,7 +615,7 @@ bot.dialog('RoamingPlans', [
 // R.3.1 - menu|Roaming|RoamingTips
 bot.dialog('RoamingTips', [
     function (session) {
-        trackBotEvent(session, 'menu|Roaming|RoamingTips');
+        trackBotEvent(session, 'menu|Roaming|RoamingTips',1);
 
         session.send("Let's get ready to roam");
         
@@ -649,7 +660,7 @@ bot.dialog('RoamingTips', [
 // R.3.1.0 - menu|Roaming|RoamingTips|ActivateRoamingOver6Months
 bot.dialog('ActivateRoamingOver6Months', [
     function (session) {
-        trackBotEvent(session, 'menu|Roaming|RoamingTips|ActivateRoamingOver6Months');
+        trackBotEvent(session, 'menu|Roaming|RoamingTips|ActivateRoamingOver6Months',1);
 
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -674,7 +685,7 @@ bot.dialog('ActivateRoamingOver6Months', [
 // R.3.1.1 - menu|Roaming|RoamingTips|ActivateRoamingBelow6Months
 bot.dialog('ActivateRoamingBelow6Months', [
     function (session) {
-        trackBotEvent(session, 'menu|Roaming|RoamingTips|ActivateRoamingBelow6Months');
+        trackBotEvent(session, 'menu|Roaming|RoamingTips|ActivateRoamingBelow6Months',1);
 
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -699,7 +710,7 @@ bot.dialog('ActivateRoamingBelow6Months', [
 // R.3.1.2 - menu|Roaming|RoamingTips|iOSDataRoaming
 bot.dialog('iOSDataRoaming', [
     function (session) {
-        trackBotEvent(session, 'menu|Roaming|RoamingTips|iOSDataRoaming');
+        trackBotEvent(session, 'menu|Roaming|RoamingTips|iOSDataRoaming',1);
 
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -723,7 +734,7 @@ bot.dialog('iOSDataRoaming', [
 // R.3.1.3 - menu|Roaming|RoamingTips|AndroidDataRoaming
 bot.dialog('AndroidDataRoaming', [
     function (session) {
-        trackBotEvent(session, 'menu|Roaming|RoamingTips|AndroidDataRoaming');
+        trackBotEvent(session, 'menu|Roaming|RoamingTips|AndroidDataRoaming',1);
 
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -745,7 +756,7 @@ bot.dialog('AndroidDataRoaming', [
 // R.3.1.4 - menu|Roaming|RoamingTips|SubscribeRoamingPass
 bot.dialog('SubscribeRoamingPass', [
     function (session) {
-        trackBotEvent(session, 'menu|Roaming|RoamingTips|SubscribeRoamingPass');
+        trackBotEvent(session, 'menu|Roaming|RoamingTips|SubscribeRoamingPass',1);
 
         session.send("BEFORE DEPARTURE: \
                     \nMake sure you turn off Data Roaming or Cellular Data/Mobile Data on your mobile phone");        
@@ -782,7 +793,7 @@ bot.dialog('SubscribeRoamingPass', [
 // R.3.1.5 - menu|Roaming|RoamingTips|MyDigiCheckRoamUsage
 bot.dialog('MyDigiCheckRoamUsage', [
     function (session) {
-        trackBotEvent(session, 'menu|Roaming|RoamingTips|MyDigiCheckRoamUsage');
+        trackBotEvent(session, 'menu|Roaming|RoamingTips|MyDigiCheckRoamUsage',1);
 
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -813,7 +824,7 @@ bot.dialog('MyDigiCheckRoamUsage', [
 // R.3.1.6 - menu|Roaming|RoamingTips|UmbCheckRoamUsage
 bot.dialog('UmbCheckRoamUsage', [
     function (session) {
-        trackBotEvent(session, 'menu|Roaming|RoamingTips|UmbCheckRoamUsage');
+        trackBotEvent(session, 'menu|Roaming|RoamingTips|UmbCheckRoamUsage',1);
 
         session.send("How to check balance for my Roaming Pass");
         var respCards = new builder.Message(session)
@@ -846,7 +857,7 @@ bot.dialog('UmbCheckRoamUsage', [
 // R.4 - menu|CommonlyAskedQuestion
 bot.dialog('CommonlyAskedQuestion', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion');
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion',1);
         
         session.send("What would you like to find out today?");
         
@@ -895,8 +906,8 @@ bot.dialog('CommonlyAskedQuestion', [
 // R.4.0 - menu|CommonlyAskedQuestion|AllAboutMyAccount
 bot.dialog('AllAboutMyAccount', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount',1);
+
 //        session.send("1. How to get my acc no\
 //                    \n2. What is my PUK code?\
 //                    \n3. How to change my acc ownership?\
@@ -944,8 +955,8 @@ bot.dialog('AllAboutMyAccount', [
 // R.4.0.0 - menu|CommonlyAskedQuestion|AllAboutMyAccount|GetAccountNo
 bot.dialog('GetAccountNo', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|GetAccountNo');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|GetAccountNo',1);
+
         session.send("Your Account Number is available on your bill at the top right hand corner");
         builder.Prompts.choice(session, "", 'Menu', { listStyle: builder.ListStyle.button });
     },
@@ -959,8 +970,8 @@ bot.dialog('GetAccountNo', [
 // R.4.0.1 - menu|CommonlyAskedQuestion|AllAboutMyAccount|WhatIsMyPuk
 bot.dialog('WhatIsMyPuk', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|WhatIsMyPuk');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|WhatIsMyPuk',1);
+
         session.send("You can follow the steps below");        
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -991,8 +1002,8 @@ bot.dialog('WhatIsMyPuk', [
 // R.4.0.2 - menu|CommonlyAskedQuestion|AllAboutMyAccount|ChangeMyAccOwnership
 bot.dialog('ChangeMyAccOwnership', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|ChangeMyAccOwnership');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|ChangeMyAccOwnership',1);
+
         builder.Prompts.choice(session, "Please visit the nearest Digi Store to change ownership of account. Both parties must be present together with NRICs for validation", 'Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
@@ -1005,8 +1016,8 @@ bot.dialog('ChangeMyAccOwnership', [
 // R.4.0.3 - menu|CommonlyAskedQuestion|AllAboutMyAccount|CheckFnF
 bot.dialog('CheckFnF', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|CheckFnF');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|CheckFnF',1);
+
         session.send("You can follow the steps below");        
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -1037,8 +1048,8 @@ bot.dialog('CheckFnF', [
 // R.4.0.5 - menu|CommonlyAskedQuestion|AllAboutMyAccount|AddFnF
 bot.dialog('AddFnF', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|AddFnF');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|AddFnF',1);
+
         session.send("Dial *128*1# and press friends and family™. Reply 1 to register a Digi number as FnF. To register a non-Digi number, reply 2.");
         builder.Prompts.choice(session, "", 'Main Menu', { listStyle: builder.ListStyle.button });
     },
@@ -1052,8 +1063,8 @@ bot.dialog('AddFnF', [
 // R.4.0.6 - menu|CommonlyAskedQuestion|AllAboutMyAccount2
 bot.dialog('AllAboutMyAccount2', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount2');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount2',1);
+
         builder.Prompts.choice(session, "", 'I\'m going overseas, what can I do?|How do I activate VOLTE?|How do I port-in?|Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
@@ -1080,8 +1091,8 @@ bot.dialog('AllAboutMyAccount2', [
 // R.4.0.6.0 - menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|GoingOverseas
 bot.dialog('GoingOverseas', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|GoingOverseas');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|GoingOverseas',1);
+
         builder.Prompts.choice(session, "For short holidays, stay in touch by activating Roaming Services", 'menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
@@ -1094,8 +1105,8 @@ bot.dialog('GoingOverseas', [
 // R.4.0.6.1 - menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToActivateVolte
 bot.dialog('HowToActivateVolte', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToActivateVolte');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToActivateVolte',1);
+
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
@@ -1126,8 +1137,8 @@ bot.dialog('HowToActivateVolte', [
 // R.4.0.6.1.0 - menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToActivateVolte|ActivateVolte
 bot.dialog('ActivateVolte', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToActivateVolte|ActivateVolte');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToActivateVolte|ActivateVolte',1);
+
         session.send("You can follow the steps below");        
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -1166,8 +1177,8 @@ bot.dialog('ActivateVolte', [
 // R.4.0.6.2 - menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToPortIn
 bot.dialog('HowToPortIn', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToPortIn');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount|AllAboutMyAccount2|HowToPortIn',1);
+
         session.send("Here are a few ways to go about it");
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -1199,8 +1210,8 @@ bot.dialog('HowToPortIn', [
 // R.4.1 - menu|CommonlyAskedQuestion|MyDigiApp
 bot.dialog('MyDigiApp', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|MyDigiApp');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|MyDigiApp',1);
+
         builder.Prompts.choice(session, "", 'How do I get started with MyDigi?|How do I download my bill from MyDigi?|How do I make payment for another via MyDigi?|Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
@@ -1226,8 +1237,8 @@ bot.dialog('MyDigiApp', [
 // R.4.1.0 - menu|CommonlyAskedQuestion|MyDigiApp|GetStartedMyDigi
 bot.dialog('GetStartedMyDigi', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|MyDigiApp|GetStartedMyDigi');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|MyDigiApp|GetStartedMyDigi',1);
+
         session.send("You can follow the steps below");
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -1255,8 +1266,8 @@ bot.dialog('GetStartedMyDigi', [
 // R.4.1.1 - menu|CommonlyAskedQuestion|MyDigiApp|DownloadBillFrMyDigi
 bot.dialog('DownloadBillFrMyDigi', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|MyDigiApp|DownloadBillFrMyDigi');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|MyDigiApp|DownloadBillFrMyDigi',1);
+
         session.send("You can follow the steps below");        
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -1290,8 +1301,8 @@ bot.dialog('DownloadBillFrMyDigi', [
 // R.4.1.1.0 - menu|CommonlyAskedQuestion|MyDigiApp|DownloadBillFrMyDigi|SeeBillsForPastSixMonths
 bot.dialog('SeeBillsForPastSixMonths', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|MyDigiApp|DownloadBillFrMyDigi|SeeBillsForPastSixMonths');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|MyDigiApp|DownloadBillFrMyDigi|SeeBillsForPastSixMonths',1);
+
         session.send("You can follow the steps below");        
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -1330,8 +1341,8 @@ bot.dialog('SeeBillsForPastSixMonths', [
 // R.4.1.2 - menu|CommonlyAskedQuestion|MyDigiApp|PayForAnotherNumber
 bot.dialog('PayForAnotherNumber', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|MyDigiApp|PayForAnotherNumber');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|MyDigiApp|PayForAnotherNumber',1);
+
         session.send("You can follow the steps below");        
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -1370,8 +1381,8 @@ bot.dialog('PayForAnotherNumber', [
 // R.4.2 - menu|CommonlyAskedQuestion|TalkTimeServices
 bot.dialog('TalkTimeServices', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|TalkTimeServices');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|TalkTimeServices',1);
+
         builder.Prompts.choice(session, "", 'How to get my acc no?|Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
@@ -1391,8 +1402,8 @@ bot.dialog('TalkTimeServices', [
 // R.4.2.0 - menu|CommonlyAskedQuestion|TalkTimeServices|TalkTimeTransfer
 bot.dialog('TalkTimeTransfer', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|TalkTimeTransfer');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|TalkTimeTransfer',1);
+
         session.send("You can follow the steps below");        
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -1423,8 +1434,8 @@ bot.dialog('TalkTimeTransfer', [
 // R.4.3 - menu|CommonlyAskedQuestion|ChargesOrBilling
 bot.dialog('ChargesOrBilling', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|ChargesOrBilling');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|ChargesOrBilling',1);
+
         builder.Prompts.choice(session, "", 'Will I be charged for calling 1300/1800 numbers?|Why is there an RM10 charge for my Buddyz?|Can I change my billing cycle?|Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
@@ -1450,8 +1461,8 @@ bot.dialog('ChargesOrBilling', [
 // R.4.3.0 - menu|CommonlyAskedQuestion|ChargesOrBilling|ChargeForCallingTollFree
 bot.dialog('ChargeForCallingTollFree', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|ChargesOrBilling|ChargeForCallingTollFree');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|ChargesOrBilling|ChargeForCallingTollFree',1);
+
         builder.Prompts.choice(session, "To be confirmed", 'Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
@@ -1464,8 +1475,8 @@ bot.dialog('ChargeForCallingTollFree', [
 // R.4.3.1 - menu|CommonlyAskedQuestion|ChargesOrBilling|ChargeForBuddyz
 bot.dialog('ChargeForBuddyz', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|ChargesOrBilling|ChargeForBuddyz');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|ChargesOrBilling|ChargeForBuddyz',1);
+
         var respCards = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
@@ -1488,8 +1499,8 @@ bot.dialog('ChargeForBuddyz', [
 // R.4.3.0 - menu|CommonlyAskedQuestion|ChargesOrBilling|ChangeBillingCycle
 bot.dialog('ChangeBillingCycle', [
     function (session) {
-        trackBotEvent(session, 'menu|CommonlyAskedQuestion|ChargesOrBilling|ChangeBillingCycle');
-        
+        trackBotEvent(session, 'menu|CommonlyAskedQuestion|ChargesOrBilling|ChangeBillingCycle',1);
+
         builder.Prompts.choice(session, "To be confirmed", 'Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
@@ -1502,7 +1513,7 @@ bot.dialog('ChangeBillingCycle', [
 bot.dialog('NLP', [
 // R - menu
     function (session) {
-        trackBotEvent(session, 'NLP');  
+        trackBotEvent(session, 'NLP',1);  
     },
     function (session) {
         session.replaceDialog('menu');
@@ -1520,10 +1531,10 @@ bot.dialog('getFeedback', [
     function (session, results) {
         switch (results.response.index) {
             case 0:
-                trackBotEvent(session,session.privateConversationData[LastMenu]+'|Feedback Yes',0);
+                trackBotEvent(session,session.privateConversationData[LastMenu]+'|Feedback Yes',1,0);
                 break;
             case 1:
-                trackBotEvent(session,session.privateConversationData[LastMenu]+'|Feedback No',0);
+                trackBotEvent(session,session.privateConversationData[LastMenu]+'|Feedback No',1,0);
                 break;
             default:
                 session.send("Sorry, I didn\'t quite get that.");
@@ -1542,7 +1553,7 @@ bot.dialog('getFeedback', [
 // R.1 - menu | PrepaidDialog
 bot.dialog('PrepaidDialog', [
     function (session) {
-        trackBotEvent(session, 'Main|Prepaid');
+        trackBotEvent(session, 'Main|Prepaid',1);
         
         builder.Prompts.choice(session, "Here are some things that I can help you with", 'Plan Recommendation|Prepaid Plans|Promotions|Internet Plans|My Account', { listStyle: builder.ListStyle.button });
     },
@@ -1580,8 +1591,8 @@ bot.dialog('PrepaidDialog', [
 // R.0.0 - menu | PrepaidDialog | PrepaidRecommendationQ1 
 bot.dialog('PrepaidRecommendationQ1', [
     function (session) {
-        trackBotEvent(session, 'Main|Prepaid|PrepaidRecommendationQ1');
-        
+        trackBotEvent(session, 'Main|Prepaid|PrepaidRecommendationQ1',1);
+
         builder.Prompts.choice(session, "Do you use a lot of voice calls?", 'Yes|No', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
@@ -1604,7 +1615,7 @@ bot.dialog('PrepaidRecommendationQ1', [
 // R.0.0.1 - menu | PrepaidDialog | PrepaidRecommendationQ1 | PrepaidRecommendationQ2
 bot.dialog('PrepaidRecommendationQ2', [
     function (session) {
-        trackBotEvent(session, 'Main|Prepaid|PrepaidRecommendationQ2');
+        trackBotEvent(session, 'Main|Prepaid|PrepaidRecommendationQ2',1);
 
         builder.Prompts.choice(session, "I see.  What do you usually use your data for?", 'Social Media|Music/Videos|Data is Life!|I don\'t really use data', { listStyle: builder.ListStyle.button });
     },
@@ -1756,7 +1767,7 @@ bot.dialog('PrepaidAccountOverview', [
 // R.1 - menu | PostpaidDialog
 bot.dialog('PostpaidDialog', [
     function (session) {
-        trackBotEvent(session, 'Main|Postpaid');
+        trackBotEvent(session, 'Main|Postpaid',1);
 
         builder.Prompts.choice(session, "Here are some things that I can help you with", 'Postpaid Plans|Promotions|Internet Plans|My Account|FAQ', { listStyle: builder.ListStyle.button });
     },
@@ -1788,8 +1799,8 @@ bot.dialog('PostpaidDialog', [
 // R.4 - menu | DownloadMyDigi
 bot.dialog('DownloadMyDigi', [
     function (session) {
-        trackBotEvent(session, 'Main|DownloadMyDigi');
-                
+        trackBotEvent(session, 'Main|DownloadMyDigi',1);
+
         var downloadMyDigiCard = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
@@ -1816,7 +1827,7 @@ bot.dialog('DownloadMyDigi', [
 // R.5 - menu | FAQDialog
 bot.dialog('FaqDialog', [
     function (session) {
-        trackBotEvent(session, 'Main|FAQ');
+        trackBotEvent(session, 'Main|FAQ',1);
 
         builder.Prompts.choice(session, "Soemthing to begin with", 'General|Postpaid|Broadband|Prepaid|Roaming', { listStyle: builder.ListStyle.button });
     },
@@ -1852,7 +1863,7 @@ bot.dialog('FaqDialog', [
 // R.5.0 - menu | FAQDialog | FaqGeneral
 bot.dialog('FaqGeneral', [
     function (session) {
-        trackBotEvent(session, 'Main|FAQ|General');
+        trackBotEvent(session, 'Main|FAQ|General',1);
 
         var msg = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -2006,7 +2017,7 @@ bot.dialog('FaqGeneral', [
 // R.5.1 - menu | FAQDialog | FaqPostpaid
 bot.dialog('FaqPostpaid', [
     function (session) {
-        trackBotEvent(session, 'Main|FAQ|Postpaid');
+        trackBotEvent(session, 'Main|FAQ|Postpaid',1);
 
         var msg = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
@@ -2062,8 +2073,8 @@ bot.dialog('FaqPostpaid', [
 // R.5.2 - menu | FAQDialog | FaqBroadband
 bot.dialog('FaqBroadband', [
     function (session) {
-        trackBotEvent(session, 'Main|FAQ|Broadband');
-        
+        trackBotEvent(session, 'Main|FAQ|Broadband',1);
+
         var msg = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
@@ -2100,8 +2111,8 @@ bot.dialog('FaqBroadband', [
 // R.5.3 - menu | FAQDialog | Prepaid
 bot.dialog('FaqPrepaid', [
     function (session) {
-        trackBotEvent(session, 'Main|FAQ|Prepaid');
-        
+        trackBotEvent(session, 'Main|FAQ|Prepaid',1);
+
         var msg = new builder.Message(session)
             .attachmentLayout(builder.AttachmentLayout.carousel)
             .attachments([
