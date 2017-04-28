@@ -18,7 +18,7 @@ var RestClient = require('node-rest-client').Client;
 var restclient = new RestClient();
 var math = require('mathjs');
 var request = require("request");
-
+var emoji = require('node-emoji');
 
 //// Initialize Telemetry Modules - remove after confirm logging is successful
 //var telemetryModule = require('./telemetry-module.js'); // Setup for Application Insights
@@ -108,6 +108,9 @@ function trackBotEvent(session, description, storeLastMenu) {
 //    var telemetry = telemetryModule.createTelemetry(session);
 //    appInsightsClient.trackEvent(session.privateConversationData[LastMenu], session.message.address.conversation.id);
 
+// dialog_state     1:end conversation
+// dialog_state     0:start / middle of conversation
+// dialog_type
 
     // @*)(*!)@(*#!@ ) why get local date also need 3 lines of text !)(@*#)(!@*#)()
     var d = new Date();
@@ -124,8 +127,10 @@ function trackBotEvent(session, description, storeLastMenu) {
                     "command": "update_chat_log",\
                     "auth_key": "a6hea2",\
                     "chat_id": "'+session.message.address.conversation.id+'",\
-                    "chat_log": "'+session.privateConversationData[LastMenu]+'",\
-                    "chat_on": "' + nowtime + '"}'
+                    "dialog_id": "'+session.message.address.id+'",\
+                    "dialog_state":"0",\
+                    "dialog_input":"",\
+                    "chat_log": "'+session.privateConversationData[LastMenu]+'"}'
         }   
     };
     try{
@@ -204,8 +209,8 @@ bot.dialog('Feedback', [
 bot.dialog('menu2', [
     function (session) {        
         trackBotEvent(session, 'menu');
-        
-        builder.Prompts.choice(session, "To get started, these are the things I can help you with. Just click on any of the below and let's get started.", 'Prepaid|Postpaid|Broadband|Roaming|Commonly Asked Question', { listStyle:builder.ListStyle.button, maxRetries:MaxRetries, retryPrompt:DefaultErrorPrompt});
+
+        builder.Prompts.choice(session, "To get started, these are the things I can help you with. Just click on any of the below and let's get started.", emoji.emojify('Prepaid|Postpaid|Broadband|Roaming|:heart:Commonly Asked Question'), { listStyle:builder.ListStyle.button, maxRetries:MaxRetries, retryPrompt:DefaultErrorPrompt});
     },
     function (session, results) {
         try {
@@ -431,12 +436,13 @@ bot.dialog('Broadband', [
             .attachments([
                 new builder.HeroCard(session)
                 .title('Digi Broadband')
-                .subtitle('Non stop entertainment')
+                .text('Non stop entertainment. \nNow at home')
                 .buttons([
                     builder.CardAction.imBack(session, "Broadband Plans", "More"),
                 ]),
                 new builder.HeroCard(session)
                 .title('Running out of quota? ')
+                .text('Boost your nonstop entertainment with Internet Top Up')
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://digi.my/mybb', 'More')
                 ])
@@ -510,12 +516,14 @@ bot.dialog('Roaming', [
                 new builder.HeroCard(session)
                 .title('Roaming Plans')
                 .subtitle('Check out your roaming options')
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Roaming-Plan.PNG') ])
                 .buttons([
                     builder.CardAction.imBack(session, "Roaming Plans", "More"),
                 ]),
                 new builder.HeroCard(session)
                 .title('Roam by country? ')
                 .subtitle('Just let us know where you\'regoing')
+                .images([ builder.CardImage.create(session, 'https://digicsbot.azurewebsites.net/Roaming-Country.PNG') ])
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/roaming/international-roaming-rates', 'More')
                 ]),
@@ -698,7 +706,7 @@ bot.dialog('iOSDataRoaming', [
             .attachments([
                 new builder.HeroCard(session)
                 .title('iOS Turn on/off data roaming')
-                .subtitle('Go to Settings > Mobile Data > \
+                .text('Go to Settings > Mobile Data > \
                         \n Mobile Data Options > \
                         \nslide the \"Data Roaming\" ON/OFF')
             ]);
@@ -890,12 +898,16 @@ bot.dialog('AllAboutMyAccount', [
         trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount');
         
         session.send("Just Key in the question number to find out the answer. Example: 3");
-        session.send("1. How to get my acc no\
-                    \n2. What is my PUK code?\
-                    \n3. How to change my acc ownership?\
-                    \n4. How to check F&F?\
-                    \n5. How to add F&F");
-        builder.Prompts.choice(session, "", '1|2|3|4|5|Main Menu|Next Page', { listStyle: builder.ListStyle.button });
+//        session.send("1. How to get my acc no\
+//                    \n2. What is my PUK code?\
+//                    \n3. How to change my acc ownership?\
+//                    \n4. How to check F&F?\
+//                    \n5. How to add F&F");
+//        builder.Prompts.choice(session, "", '1|2|3|4|5|Main Menu|Next Page', { listStyle: builder.ListStyle.button });
+        
+        builder.Prompts.choice(session, "", 'How to get my acc no|What is my PUK code?|How to change my acc ownership?|How to check F&F?|How to add F&F|\nMain Menu|\nNext Page', { listStyle: builder.ListStyle.button });
+        
+        
     },
     function (session, results) {
         switch (results.response.index) {
@@ -1515,7 +1527,7 @@ bot.dialog('NLP', [
 // R.5.3 - menu | FAQDialog | Prepaid
 bot.dialog('getFeedback', [
     function (session) {        
-        builder.Prompts.choice(session, "We would appreciate your feedback\n Do you find our Virtual Assistant userful? ", 'Yes|No', { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "We would appreciate your feedback\n Do you find our Virtual Assistant useful? ", 'Yes|No', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         switch (results.response.index) {
