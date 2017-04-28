@@ -897,7 +897,6 @@ bot.dialog('AllAboutMyAccount', [
     function (session) {
         trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount');
         
-        session.send("Just Key in the question number to find out the answer. Example: 3");
 //        session.send("1. How to get my acc no\
 //                    \n2. What is my PUK code?\
 //                    \n3. How to change my acc ownership?\
@@ -905,7 +904,7 @@ bot.dialog('AllAboutMyAccount', [
 //                    \n5. How to add F&F");
 //        builder.Prompts.choice(session, "", '1|2|3|4|5|Main Menu|Next Page', { listStyle: builder.ListStyle.button });
         
-        builder.Prompts.choice(session, "", 'How to get my acc no|What is my PUK code?|How to change my acc ownership?|How to check F&F?|How to add F&F|\nMain Menu|\nNext Page', { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "All About My Accounts", 'How to get my acc no?|What is my PUK code?|Change my acc ownership?|How to check F&F?|How to add F&F?|Main Menu|Next Page', { listStyle: builder.ListStyle.button });
         
         
     },
@@ -1055,11 +1054,7 @@ bot.dialog('AllAboutMyAccount2', [
     function (session) {
         trackBotEvent(session, 'menu|CommonlyAskedQuestion|AllAboutMyAccount2');
         
-        session.send("Just Key in the question number to find out the answer. Example: 6");
-        builder.Prompts.choice(session, " 6 I'm going overseas, what can I do? \
-                                        \n 7 How do I activate VOLTE\
-                                        \n 8 How do I port-in?", 
-                               '6|7|8|Main Menu', { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", 'I\'m going overseas, what can I do?|How do I activate VOLTE?|How do I port-in?|Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         switch (results.response.index) {
@@ -1206,10 +1201,7 @@ bot.dialog('MyDigiApp', [
     function (session) {
         trackBotEvent(session, 'menu|CommonlyAskedQuestion|MyDigiApp');
         
-        session.send("Just Key in the question number to find out the answer. Example: 3");
-        builder.Prompts.choice(session, "1. How do I get started with MyDigi?\
-                                        \n2. How do I download my bill from MyDigi?\
-                                        \n3. How do I make payment for another via MyDigi?", '1|2|3|Main Menu', { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", 'How do I get started with MyDigi?|How do I download my bill from MyDigi?|How do I make payment for another via MyDigi?|Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         switch (results.response.index) {
@@ -1380,8 +1372,7 @@ bot.dialog('TalkTimeServices', [
     function (session) {
         trackBotEvent(session, 'menu|CommonlyAskedQuestion|TalkTimeServices');
         
-        session.send("Just Key in the question number to find out the answer. Example: 3");
-        builder.Prompts.choice(session, "1. How to get my acc no", '1|Main Menu', { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", 'How to get my acc no?|Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         switch (results.response.index) {
@@ -1434,10 +1425,7 @@ bot.dialog('ChargesOrBilling', [
     function (session) {
         trackBotEvent(session, 'menu|CommonlyAskedQuestion|ChargesOrBilling');
         
-        session.send("Just Key in the question number to find out the answer. Example: 3");
-        builder.Prompts.choice(session, "1. Will I be charged for calling 1300 / 1800 numbers?\
-                                        \n2. Why is there an RM10 charge for my Buddyz?\
-                                        \n3. Can I change my billing cycle?", '1|2|3|Main Menu', { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "", 'Will I be charged for calling 1300/1800 numbers?|Why is there an RM10 charge for my Buddyz?|Can I change my billing cycle?|Main Menu', { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         switch (results.response.index) {
