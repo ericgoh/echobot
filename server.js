@@ -20,12 +20,6 @@ var math = require('mathjs');
 var request = require("request");
 var emoji = require('node-emoji');
 
-//// Initialize Telemetry Modules - remove after confirm logging is successful
-//var telemetryModule = require('./telemetry-module.js'); // Setup for Application Insights
-//var appInsights = require('applicationinsights');
-//appInsights.setup(process.env.APPINSIGHTS_INSTRUMENTATIONKEY).start();
-//var appInsightsClient = appInsights.getClient();
-
 
 // Get secrets from server environment
 var botConnectorOptions = { 
@@ -81,7 +75,7 @@ bot.on('conversationUpdate', function (message) {
     }
 });
 
-// Wrapper function to use telemetry & logging
+// Wrapper function for logging
 function trackBotEvent(session, description, dialog_state, storeLastMenu) {
     // log session.message.address to identify user 
     //var address = JSON.stringify(session.message.address); session.send("User Address=" + address);
@@ -105,10 +99,6 @@ function trackBotEvent(session, description, dialog_state, storeLastMenu) {
     if(storeLastMenu==undefined) {
         session.privateConversationData[LastMenu] = description;
     }
-//  Remove after confirm logging is successful
-//    var telemetry = telemetryModule.createTelemetry(session);
-//    appInsightsClient.trackEvent(session.privateConversationData[LastMenu], session.message.address.conversation.id);
-
 // Logging to Database
 //{"command": "update_chat_log",
 //"auth_key": "a6hea2",
@@ -150,6 +140,20 @@ function trackBotEvent(session, description, dialog_state, storeLastMenu) {
 //        console.log("cannot log");
     }
 }
+
+const logUserConversation = (event) => { console.log('message: ' + event.text + ', user: ' + event.address.user.name);
+};
+// Middleware for logging
+bot.use({
+    receive: function (event, next) {
+        logUserConversation(event);
+        next();
+//    },
+//    send: function (event, next) {
+//        logUserConversation(event);
+//        next();
+    }
+});
 
 // R - menu
 bot.dialog('intro', [
@@ -866,28 +870,28 @@ bot.dialog('CommonlyAskedQuestion', [
             .attachments([
                 new builder.HeroCard(session)
                 .title('All About My Account')
-                .subtitle('We have the answers to the most asked questions on managing your account')
+                .text('We have the answers to the most asked questions on managing your account')
                 .buttons([
                     builder.CardAction.imBack(session, "About My Account", "More"),
                 ]),
 
                 new builder.HeroCard(session)
                 .title('MyDigi App')
-                .subtitle('An app to manage all your account needs. Find out how to use it')
+                .text('An app to manage all your account needs. Find out how to use it')
                 .buttons([
                     builder.CardAction.imBack(session, "MyDigi App", "More"),
                 ]),
                         
                 new builder.HeroCard(session)
                 .title('Talk Time Services')
-                .subtitle('Find out how to request from or give prepaid credit to others')
+                .text('Find out how to request from or give prepaid credit to others')
                 .buttons([
                     builder.CardAction.imBack(session, "Talk Time Services", "More"),
                 ]),
 
                 new builder.HeroCard(session)
                 .title('Charges / Billing')
-                .subtitle('Got questions on your bills? Maybe we can help')
+                .text('Got questions on your bills? Maybe we can help')
                 .buttons([
                     builder.CardAction.imBack(session, "Charges Billing", "More"),
                 ])
