@@ -206,14 +206,8 @@ bot.dialog('intro', [
 
         trackBotEvent(session, 'intro', 0);
         
-        var respCards = new builder.Message(session)
-            .attachments([
-                new builder.HeroCard(session)
-                .text('Hello, I\'m your friendly Digi Virtual Assistant and I\'ll be available from 9pm-12am.\
-                \n\n You can ask me (almost) anything about Digi\'s products. Just click on any of the below. Let\'s get started.')
-                .images([ builder.CardImage.create(session, imagedir + '/images/digi-telecommunications.png') ])
-                ]);
-        session.send(respCards);        
+        session.send("Hello, I\'m your friendly Digi Virtual Assistant and I\'ll be available from 9pm-12am.");
+        session.send("You can ask me (almost) anything about Digi\'s products. ");
         session.replaceDialog('menu');        
     }
 ]);
@@ -1038,7 +1032,7 @@ bot.dialog('GetAccountNo', [
     function (session) {
         trackBotEvent(session, 'menu|FrequentlyAskedQuestion|AllAboutMyAccount|GetAccountNo',1);
 
-        builder.Prompts.choice(session, "YYour account number is available on your bill at the top right hand corner. Eg: 1.356XXXX", 'Main Menu', { listStyle:builder.ListStyle.button, maxRetries:MaxRetries_SingleMenu, retryPrompt:DefaultErrorPrompt});
+        builder.Prompts.choice(session, "Your account number is available on your bill at the top right hand corner. Eg: 1.356XXXX", 'Main Menu', { listStyle:builder.ListStyle.button, maxRetries:MaxRetries_SingleMenu, retryPrompt:DefaultErrorPrompt});
     },
     function (session, results) {
         session.replaceDialog('menu');
@@ -1672,7 +1666,7 @@ bot.dialog('ChangeBillingCycle', [
 
 bot.dialog('getFeedback', [
     function (session) {
-        builder.Prompts.choice(session, emoji.emojify("We would appreciate your feedback. How would you rate our Virtual Assistant? \n(1)not able to help me, (5)very useful"), emoji.emojify('1|2|3|4|5'), { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, emoji.emojify("We would appreciate your feedback. How would you rate our Virtual Assistant? \n(1)not able to help me, (5)very useful"), emoji.emojify('★|★★|★★★|★★★★|★★★★★'), { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         switch (results.response.index) {
