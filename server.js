@@ -106,7 +106,7 @@ bot.on('conversationUpdate', function (message) {
 
 // Wrapper function for logging
 function trackBotEvent(session, description, dialog_state, storeLastMenu) {
-    session.send({ type: 'typing' });   // Send typing to all menu
+//    session.send({ type: 'typing' });   // Send typing to all menu
 
     // log session.message.address to identify user 
     //var address = JSON.stringify(session.message.address); session.send("User Address=" + address);
