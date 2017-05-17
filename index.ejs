@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>Digi Virtual Assistant</title>
+        <link href="botchat.css" rel="stylesheet" />
+    </head>
+    <body style="background:#fd0 url('http://new.digi.com.my/cs/site_template/digi/images/digi-pattern.png');">
+        <div>
+            <div id="BotChatGoesHere"/>
+            <div style="clear:both;"/>
+        </div>
+
+        <script src="botchat.js"></script>
+		<script src=https://code.jquery.com/jquery-3.2.1.min.js></script>
+       
+        <script>
+            var now = new Date();
+
+            // display offline page, if requested to
+            <%if (process.env.OFFLINE == '1') { %>
+                window.location.replace("http://bot.digi.com.my/offline.html");
+            <% } %>
+
+            // display offline page, all the time
+            // EXCEPT display BOT in 9pm-10pm in April 2017
+            if(now.getHours()<21) {         //WHITELIST 9pm-12pm for chatbot                
+                <%if (process.env.DEVELOPMENT !== '1') { %>
+                    window.location.replace("http://new.digi.com.my/webchat");
+                <% } %>
+            }
+            // else, launch Chatbot
+            BotChat.App({
+                directLine: {
+                    token: "<%= token %>"
+                },
+                user: { id: 'Me' },
+                bot: { id: 'aura' },
+            }, document.getElementById("BotChatGoesHere"));
+        </script>
+    </body>
+</html>
