@@ -229,22 +229,22 @@ bot.dialog('intro', [
     }
 ]);
 
-// R - menu
-bot.dialog('menu', [
-    function (session) {
-        
-        if(session.privateConversationData[NumOfFeedback]>2)    // Get Feedback every 2nd transaction
-        {
-            session.privateConversationData[NumOfFeedback] = 0;
-            session.replaceDialog('getFeedback');
-        } else {
-            session.privateConversationData[NumOfFeedback]++;
-            session.replaceDialog('menu2');            
-        }
-    }
-]).triggerAction({
-    matches: /^(main menu)|(menu)|(begin)|(Let\'s get started)$/i
-});
+//// R - menu
+//bot.dialog('menu', [
+//    function (session) {
+//        
+//        if(session.privateConversationData[NumOfFeedback]>2)    // Get Feedback every 2nd transaction
+//        {
+//            session.privateConversationData[NumOfFeedback] = 0;
+//            session.replaceDialog('getFeedback');
+//        } else {
+//            session.privateConversationData[NumOfFeedback]++;
+//            session.replaceDialog('menu2');            
+//        }
+//    }
+//]).triggerAction({
+//    matches: /^(main menu)|(menu)|(begin)|(Let\'s get started)$/i
+//});
 
 bot.dialog('byemenu', [
     function (session) {
@@ -319,7 +319,7 @@ bot.dialog('Feedback', [
 
 
 // R - menu
-bot.dialog('menu2', [
+bot.dialog('menu', [
     function (session) {
         trackBotEvent(session, 'menu', 0);
         
@@ -345,7 +345,9 @@ bot.dialog('menu2', [
         session.send(DefaultMaxRetryErrorPrompt);
         session.replaceDialog('menu');
     }
-]);
+]).triggerAction({
+    matches: /^(main menu)|(menu)|(begin)|(Let\'s get started)$/i
+});
 
 
 // R.0 - menu|Prepaid
