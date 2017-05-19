@@ -1557,7 +1557,7 @@ bot.dialog('PayForAnotherNumber', [
         session.replaceDialog('menu');
     }
 ]).triggerAction({
-    matches: /(Pay For Another Number)|(make payment for another via MyDigi)/i
+    matches: /(Pay For Another Number)|(make payment for another via MyDigi)|(make payment for another number)/i
 });
 
 // R.4.2 - menu|OtherQuestions|TalkTimeServices
