@@ -1697,6 +1697,36 @@ bot.dialog('ChangeBillingCycle', [
 //    matches: /(Who)|(What)|(How)(I want)/i
 //});
 
+//////////////////////////////////////////////////////////////////////////////
+// Small talks
+bot.dialog('SmallTalk1', [
+    function (session) {
+        trackBotEvent(session, 'smalltalk',1);
+
+        session.send("Hi, I'm Yellow, Digi's virtual assistant");
+    }
+]).triggerAction({
+    matches: /(hi)|(hello)|(are you)|(name)|(call you)/i
+});
+
+bot.dialog('SmallTalk2', [
+    function (session) {
+        trackBotEvent(session, 'smalltalk2',1);
+
+        session.send("I'm glad to help you. You can type menu, or press any buttons above. ");
+    }
+]).triggerAction({
+    matches: /(bot)|(great)|(thank you)/i
+});
+
+bot.dialog('SmallTalk3', [
+    function (session) {
+        trackBotEvent(session, 'smalltalk3',1);
+        session.send("I see. We will try to improve. You can ask me anything on Digi products");
+    }
+]).triggerAction({
+    matches: /(clever)|(bad)|(sucks)/i
+});
 
 bot.dialog('getFeedback', [
     function (session) {
