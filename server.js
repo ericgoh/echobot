@@ -1043,7 +1043,7 @@ bot.dialog('AllAboutMyAccount', [
                 .buttons([
                     builder.CardAction.imBack(session, "How to get my acc no", "How to get my acc no?"),
                     builder.CardAction.imBack(session, "What is my PUK code", "What is my PUK code?"),
-                    builder.CardAction.imBack(session, "PUK2", "What is my PUK code(2)?"),
+//                    builder.CardAction.imBack(session, "PUK2", "What is my PUK code(2)?"),
                     builder.CardAction.imBack(session, "How to change my account ownership", "How to change my account ownership?"),
                     builder.CardAction.imBack(session, "How to check Friends & Family", "How to check Friends & Family?"),
                     builder.CardAction.imBack(session, "How to add Friends & Family", "How to add Friends & Family?"),
@@ -1303,10 +1303,10 @@ bot.dialog('HowToActivateVolte', [
                 .buttons([
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/services/volte', 'Check'),
                     builder.CardAction.imBack(session, "VoLTE Activation", "Activation")
-                .images([ builder.CardImage.create(session, imagedir + '/images/FAQ-Activate-Volte.jpg') ])
                 ])
+                .images([ builder.CardImage.create(session, imagedir + '/images/FAQ-Activate-Volte.jpg') ])
             ]);
-        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries, retryPrompt:DefaultErrorPrompt});
+        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries_SingleMenu, retryPrompt:DefaultErrorPrompt});
     },
     function (session, results) {
         session.send(DefaultMaxRetryErrorPrompt)
@@ -1352,7 +1352,7 @@ bot.dialog('ActivateVolte', [
         session.replaceDialog('menu');
     }
 ]).triggerAction({
-    matches: /(VoLTE Activation)/
+    matches: /(VoLTE Activation)/i
 });
 
 // R.4.0.6.2 - menu|OtherQuestions|AllAboutMyAccount|AllAboutMyAccount2|HowToPortIn
