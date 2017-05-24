@@ -61,7 +61,7 @@ var bot = new builder.UniversalBot(connector, [
 
 ]).set('autoBatchDelay',1000);
 // Require Functions
-bot.library(require('./validators').createLibrary());
+//bot.library(require('./validators').createLibrary());
 bot.library(require('./dialogs/uidemo').createLibrary());
 
 // start by getting API Gateway token first
@@ -108,7 +108,7 @@ bot.on('conversationUpdate', function (message) {
 
 // Wrapper function for logging
 function trackBotEvent(session, description, dialog_state, storeLastMenu) {
-//    session.send({ type: 'typing' });   // Send typing to all menu
+    session.send({ type: 'typing' });   // Send typing to all menu
 
     // log session.message.address to identify user 
     //var address = JSON.stringify(session.message.address); session.send("User Address=" + address);
@@ -249,7 +249,7 @@ bot.dialog('intro', [
 bot.dialog('byemenu', [
     function (session) {
         session.send("Bye for now.");
-        session.send("Thanks for using Yellow");
+        session.send("Thanks for using Yello");
         session.send("You can always press \"Main Menu\" button above to start over");
             }
 ]).triggerAction({
@@ -296,26 +296,26 @@ bot.dialog('ContactCustomerService', [
     matches: /(Customer Service)|(email)/i
 });
 
-bot.dialog('Feedback', [
-    function (session) {
-        var respCards = new builder.Message(session)
-            .attachmentLayout(builder.AttachmentLayout.carousel)
-            .attachments([
-                new builder.HeroCard(session)
-                .title('Feedback Form (Internal Testing use only)')
-                .subtitle('Thanks for your participation. We would appreciate your feedback')
-                .buttons([
-                    builder.CardAction.openUrl(session, 'https://goo.gl/forms/giIkIYVHLxL8l2ob2', 'My Feedback')
-                ])
-            ]);
-        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle: builder.ListStyle.button });
-    },
-    function (session, results) {
-        session.replaceDialog('menu');
-    },
-]).triggerAction({
-    matches: /^(Feedback)$/i
-});
+//bot.dialog('Feedback', [
+//    function (session) {
+//        var respCards = new builder.Message(session)
+//            .attachmentLayout(builder.AttachmentLayout.carousel)
+//            .attachments([
+//                new builder.HeroCard(session)
+//                .title('Feedback Form (Internal Testing use only)')
+//                .subtitle('Thanks for your participation. We would appreciate your feedback')
+//                .buttons([
+//                    builder.CardAction.openUrl(session, 'https://goo.gl/forms/giIkIYVHLxL8l2ob2', 'My Feedback')
+//                ])
+//            ]);
+//        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle: builder.ListStyle.button });
+//    },
+//    function (session, results) {
+//        session.replaceDialog('menu');
+//    },
+//]).triggerAction({
+//    matches: /^(Feedback)$/i
+//});
 
 
 // R - menu
@@ -336,9 +336,26 @@ bot.dialog('menu', [
                     builder.CardAction.imBack(session, "Postpaid", "Postpaid"),
                     builder.CardAction.imBack(session, "Broadband", "Broadband"),
                     builder.CardAction.imBack(session, "Roaming", "Roaming"),
-                    builder.CardAction.imBack(session, "Other Questions", "Other Questions"),
-                ])
-            ]);
+                    builder.CardAction.imBack(session, "Other Questions", "Other Questions")
+                ])])
+		;
+
+//		session.send(respCards);
+//        var respCards = new builder.Message(session)
+//            .text("Just click on any of the below and let\'s get started.")
+//            .suggestedActions(
+//                builder.SuggestedActions.create(
+//                    session,[
+//                        builder.CardAction.imBack(session, "Prepaid", "Prepaid"),
+//                        builder.CardAction.imBack(session, "Postpaid", "Postpaid"),
+//                        builder.CardAction.imBack(session, "Broadband", "Broadband"),
+//                        builder.CardAction.imBack(session, "Roaming", "Roaming"),
+//                        builder.CardAction.imBack(session, "Other Questions", "Other Questions")
+//                    ]
+//                )
+//            );
+//		session.send(respCards);
+//	}
         builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries, retryPrompt:DefaultErrorPrompt});
     },
     function (session, results) {
@@ -1060,7 +1077,7 @@ bot.dialog('AllAboutMyAccount', [
         builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries, retryPrompt:DefaultErrorPrompt});
     },
     function (session, results) {
-        session.send(DefaultMaxRetryErrorPrompt)
+        session.send(DefaultMaxRetryErrorPrompt);
         session.replaceDialog('menu');
     }
 ]).triggerAction({
@@ -1078,10 +1095,8 @@ bot.dialog('GetAccountNo', [
                 .text('Your account number is available on your bill at the top right hand corner. Eg: 1.356XXXX')
                 .images([ builder.CardImage.create(session, imagedir + '/images/FAQ-Account-No.png') ])
             ]);
-        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries_SingleMenu, retryPrompt:DefaultErrorPrompt});		
-    },
-    function (session, results) {
-        session.replaceDialog('menu');
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
     }
 ]).triggerAction({
     matches: /(Account No)|(Acc No)|(How to get my acc no)/i
@@ -1111,13 +1126,8 @@ bot.dialog('WhatIsMyPuk', [
                 .subtitle('Swipe left to select SIM and you will find your PUK code')
                 .images([ builder.CardImage.create(session, imagedir + '/images/FAQ-PUK-step3.png') ])
             ]);
-//		session.send(respCards);
-//		builder.Prompts.choice(session, "Is this information helpful?", "Yes|No", { listStyle:builder.ListStyle.button, maxRetries:MaxRetries_SingleMenu, retryPrompt:DefaultErrorPrompt});
-        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries_SingleMenu, retryPrompt:DefaultErrorPrompt});
-    },
-    function (session, results) {
-        session.send("Thanks for your feedback");
-        session.replaceDialog('menu');
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
     }
 ]).triggerAction({
     matches: /(What Is My Puk)|(What is my PUK code)|(puk)/i
@@ -1168,9 +1178,8 @@ bot.dialog('ChangeMyAccOwnership', [
         trackBotEvent(session, 'menu|OtherQuestions|AllAboutMyAccount|ChangeMyAccOwnership',1);
 
         session.send("Change or transfer of ownership? Just head to the nearest Digi Store. Just a reminder - Both parties must be there with NRICs for validation, please.");
-    },
-    function (session, results) {
-        session.replaceDialog('menu');
+
+		session.replaceDialog("getInfoFeedback");		
     }
 ]).triggerAction({
     matches: /(Change My Account Ownership)|(acc ownership)|(account ownership)/i
@@ -1200,11 +1209,8 @@ bot.dialog('CheckFnF', [
                 .subtitle('Swipe left to select \'Family & Friends\' to view your list')
                 .images([ builder.CardImage.create(session, imagedir + '/images/FAQ-CheckFnF-step3.png') ])
             ]);
-        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries_SingleMenu, retryPrompt:DefaultErrorPrompt});
-    },
-    function (session, results) {
-        session.send(DefaultMaxRetryErrorPrompt)
-        session.replaceDialog('menu');
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
     }
 ]).triggerAction({
     matches: /(Check FnF)|(Friends & Family)|(How to check F&F)|(friends and family)|(friend and family)|(friend family)|(friends family)|(F&F)/i
@@ -1239,10 +1245,8 @@ bot.dialog('AddFnF', [
                 .subtitle('Click on + Key in the phone number')
                 .images([ builder.CardImage.create(session, imagedir + '/images/FAQ-AddFnF-step4.png') ])
             ]);
-        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries_SingleMenu, retryPrompt:DefaultErrorPrompt});
-    },
-    function (session, results) {
-        session.replaceDialog('menu');
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
     }
 ]).triggerAction({
     matches: /(Add FnF)|(Add Friends and Family)|(How to add F&F)|(Add Friends & Family)/i
@@ -1263,14 +1267,10 @@ bot.dialog('AllAboutMyAccount2', [
                     builder.CardAction.imBack(session, "I\'m going overseas", "I\'m going overseas, what can I do?"),
                     builder.CardAction.imBack(session, "How do I activate VoLTE", "How do I activate VoLTE?"),
                     builder.CardAction.imBack(session, "How do I port-in", "How do I port-in?")
-//                    builder.CardAction.imBack(session, "Main Menu", "Main Menu")
                 ])
             ]);
-        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries, retryPrompt:DefaultErrorPrompt});
-    },
-    function (session, results) {
-        session.send(DefaultMaxRetryErrorPrompt)
-        session.replaceDialog('menu');
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
     }
 ]).triggerAction({
     matches: /(Account:Next Page)/i
@@ -1306,11 +1306,8 @@ bot.dialog('HowToActivateVolte', [
                 ])
                 .images([ builder.CardImage.create(session, imagedir + '/images/FAQ-Activate-Volte.jpg') ])
             ]);
-        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries_SingleMenu, retryPrompt:DefaultErrorPrompt});
-    },
-    function (session, results) {
-        session.send(DefaultMaxRetryErrorPrompt)
-        session.replaceDialog('menu');
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
     }
 ]).triggerAction({
     matches: /(How to activate Volte)|(How do I activate VoLTE)|(volte)/i
@@ -1345,11 +1342,8 @@ bot.dialog('ActivateVolte', [
                 .title('Step 5')
                 .subtitle('Choose Voice & Data to enable VoLTE')
             ]);
-        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries_SingleMenu, retryPrompt:DefaultErrorPrompt});
-    },
-    function (session, results) {
-        session.send(DefaultMaxRetryErrorPrompt)
-        session.replaceDialog('menu');
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
     }
 ]).triggerAction({
     matches: /(VoLTE Activation)/i
@@ -1380,11 +1374,8 @@ bot.dialog('HowToPortIn', [
                     builder.CardAction.openUrl(session, 'http://new.digi.com.my/support/digi-store', 'Store Locator')
                 ])
             ]);
-        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries_SingleMenu, retryPrompt:DefaultErrorPrompt});
-    },
-    function (session, results) {
-        session.send(DefaultMaxRetryErrorPrompt)
-        session.replaceDialog('menu');
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
     }
 ]).triggerAction({
     matches: /(How to Port in)|(How do I port-in)|(port in)|(portin)/i
@@ -1403,14 +1394,10 @@ bot.dialog('MyDigiApp', [
                     builder.CardAction.imBack(session, 'How do I get started with MyDigi', 'How do I get started with MyDigi?'),
                     builder.CardAction.imBack(session, "How do I download my bill from MyDigi", "How do I download my bill from MyDigi?"),
                     builder.CardAction.imBack(session, "How do I make payment for another number via MyDigi", "How do I make payment for another number via MyDigi?")
-//                    builder.CardAction.imBack(session, "Main Menu", "Main Menu")
                 ])
             ]);
-        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries, retryPrompt:DefaultErrorPrompt});
-    },
-    function (session, results) {
-        session.send(DefaultMaxRetryErrorPrompt)
-        session.replaceDialog('menu');
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
     }        
 ]).triggerAction({
     matches: /(MyDigi App)|(mydigi)|(my digi)/i
@@ -1467,11 +1454,8 @@ bot.dialog('DownloadBillFrMyDigi', [
                 .subtitle('Click on \'Download Bills\' just below the total charges')
                 .images([ builder.CardImage.create(session, imagedir + '/images/FAQ-DownloadBill-step2.png') ])
             ]);
-        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries, retryPrompt:DefaultErrorPrompt});
-    },
-    function (session, results) {
-        session.send(DefaultMaxRetryErrorPrompt)
-        session.replaceDialog('menu');
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
     }        
 ]).triggerAction({
     matches: /(Download Bill)|(download my bill)/i
@@ -1506,11 +1490,8 @@ bot.dialog('SeeBillsForPastSixMonths', [
                 .title('Step 5')
                 .subtitle('You can view & download your bills for the last 6 months')
             ]);
-        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries_SingleMenu, retryPrompt:DefaultErrorPrompt});
-    },
-    function (session, results) {
-        session.send(DefaultMaxRetryErrorPrompt)
-        session.replaceDialog('menu');
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
     }
 ]).triggerAction({
     matches: /(Bills for past 6 months)|(previous bill)|(past bill)/i
@@ -1550,11 +1531,8 @@ bot.dialog('PayForAnotherNumber', [
                 .subtitle("Select the name of the person you would like to make payment for, key in the amount and email address. Then click on Pay Bill. That's it - all done!")
                 .images([ builder.CardImage.create(session, imagedir + '/images/FAQ-PayForAnother-step5.png') ]),
             ]);
-        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries_SingleMenu, retryPrompt:DefaultErrorPrompt});
-    },
-    function (session, results) {
-        session.send(DefaultMaxRetryErrorPrompt)
-        session.replaceDialog('menu');
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
     }
 ]).triggerAction({
     matches: /(Pay For Another Number)|(make payment for another via MyDigi)|(make payment for another number)/i
@@ -1571,14 +1549,10 @@ bot.dialog('TalkTimeServices', [
                 new builder.HeroCard(session)
                 .buttons([
                     builder.CardAction.imBack(session, 'How do I do a talk-time transfer','How do I do a talk-time transfer?')
-//                    builder.CardAction.imBack(session, "Main Menu", "Main Menu")
                 ])
             ]);
-        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries, retryPrompt:DefaultErrorPrompt});
-    },
-    function (session, results) {
-        session.send(DefaultMaxRetryErrorPrompt)
-        session.replaceDialog('menu');
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
     }
 ]).triggerAction({
     matches: /(Talk Time Services)/i
@@ -1608,14 +1582,11 @@ bot.dialog('TalkTimeTransfer', [
                 .subtitle('You will receive a confirmation text message upon successful transaction')
                 .images([ builder.CardImage.create(session, imagedir + '/images/FAQ-TalkTimeTransfer-step3.png') ]),
             ]);
-        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries_SingleMenu, retryPrompt:DefaultErrorPrompt});
-    },
-    function (session, results) {
-        session.send(DefaultMaxRetryErrorPrompt)
-        session.replaceDialog('menu');
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
     }
 ]).triggerAction({
-    matches: /(Talk Time Transfer)|(How do I do a talk-time transfer)/i
+    matches: /(Talk Time Transfer)|(How do I do a talk-time transfer)|(?=.*\btalk\b)(?=.*\btalk\b)(?=.*\btransfer\b).*$/i
 });
 
 // R.4.3 - menu|OtherQuestions|ChargesOrBilling
@@ -1634,11 +1605,8 @@ bot.dialog('ChargesOrBilling', [
                     builder.CardAction.imBack(session, 'Can I change my billing cycle', 'Can I change my billing cycle?')
                 ])
             ]);
-        builder.Prompts.choice(session, respCards, AnyResponse, { listStyle:builder.ListStyle.button, maxRetries:MaxRetries, retryPrompt:DefaultErrorPrompt});
-    },
-    function (session, results) {
-        session.send(DefaultMaxRetryErrorPrompt)
-        session.replaceDialog('menu');
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
     }
 ]).triggerAction({
     matches: /(Charges Billing)|(billing)|(charges)|(1800)/i
@@ -1650,9 +1618,7 @@ bot.dialog('ChargeForCallingTollFree', [
         trackBotEvent(session, 'menu|OtherQuestions|ChargesOrBilling|ChargeForCallingTollFree',1);
 
         session.send("Yes. For peak hour 7am to 6.59pm is RM0.30 per min and off peak 7pm to 6.59am is only RM0.15 per min");
-    },
-    function (session, results) {
-        session.replaceDialog('menu');
+		session.replaceDialog("getInfoFeedback");		
     }
 ]).triggerAction({
     matches: /(Charge for calling toll free)|(calling tollfree)|(Will I be charged for calling 1300 1800 numbers)/i
@@ -1664,9 +1630,7 @@ bot.dialog('ChargeForBuddyz', [
         trackBotEvent(session, 'menu|OtherQuestions|ChargesOrBilling|ChargeForBuddyz',1);
 
 		session.send("You can register up to three (3) Buddyz™ (Digi numbers), free of charge and change them at any time. RM10.00 will be charged for each change of number.");
-    },
-    function (session, results) {
-        session.replaceDialog('menu');
+		session.replaceDialog("getInfoFeedback");		
     }
 ]).triggerAction({
     matches: /(Charge For Buddyz)|(Why is there an RM10 charge for my Buddyz)|(buddyz)/i
@@ -1678,13 +1642,184 @@ bot.dialog('ChangeBillingCycle', [
         trackBotEvent(session, 'menu|OtherQuestions|ChargesOrBilling|ChangeBillingCycle',1);
 
         session.send("I'm afraid you can't change your billing cycle.");
-    },
-    function (session, results) {
-        session.replaceDialog('menu');
+		session.replaceDialog("getInfoFeedback");		
     }
 ]).triggerAction({
     matches: /(Change Billing Cycle)|(Can I change my billing cycle)|(bill cycle)/i
 });
+
+
+// R.MyDigi.Intro
+bot.dialog('MyDigiIntro', [
+    function (session) {
+        trackBotEvent(session, 'menu|MyDigi|Intro',1);
+
+        session.send("When you start MyDigi, you will see these screens on your current usages");
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.HeroCard(session)
+				.title("Screen 1/4")
+				.text("This page shows Balance(Prepaid plan) or Billed amount (Postpaid plan)")
+                .images([ builder.CardImage.create(session, imagedir + '/images/MyDigi-Intro-Page1.png') ])
+
+                ,new builder.HeroCard(session)
+				.title("Screen 2/4")
+				.text("This page Shows total Internet quota available. Click on “View Details” to see all quota")
+                .images([ builder.CardImage.create(session, imagedir + '/images/MyDigi-Intro-Page2.png') ])
+//                .CardAction.imBack(session, 'Internet Quota Details', 'View Details')
+				
+                ,new builder.HeroCard(session)
+				.title("Screen 3/4")
+				.text("Shows total voice quota available with your plan. If balance is 0, normal call rates apply")
+                .images([ builder.CardImage.create(session, imagedir + '/images/MyDigi-Intro-Page3.png') ])
+
+                ,new builder.HeroCard(session)
+				.title("Screen 4/4")
+				.text("Shows total SMS available with your plan. If balance is 0, SMS rates apply")
+                .images([ builder.CardImage.create(session, imagedir + '/images/MyDigi-Intro-Page4.png') ])
+				
+            ]);
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
+    }
+]).triggerAction({
+	// Match question with 2 words in any order: 	MyDigi + intro		MyDigi + Start 
+    matches: /^(?=.*\bmydigi\b)(?=.*\bintro\b)|(?=.*\bmydigi\b)(?=.*\bstart\b).*$/i
+});
+
+// R.MyDigi.Intro
+bot.dialog('MyDigiNotification', [
+    function (session) {
+        trackBotEvent(session, 'menu|MyDigi|Notification',1);
+
+        session.send("Notifications will be sent when Freebies redeemed OR Prepaid credit balance low (<RM2) OR Prepaid validity expired OR Postpaid bill past due. Here is how you can view your notification");
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.HeroCard(session)
+				.title("Step 1")
+				.text("At MyDigi app, click on bell icon to open notifications tab ")
+                .images([ builder.CardImage.create(session, imagedir + '/images/MyDigi-Notification-Page1.png') ])
+
+                ,new builder.HeroCard(session)
+				.title("Step 2")
+				.text("To close the notification tab, click on bell icon or swipe to the right")
+                .images([ builder.CardImage.create(session, imagedir + '/images/MyDigi-Notification-Page2.png') ])
+				
+            ]);
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
+    }
+]).triggerAction({
+	// Match question with 2 words in any order: 	MyDigi + intro		MyDigi + Start 
+    matches: /^(notification)|(?=.*\bmydigi\b)(?=.*\balert\b).*$/i
+});
+
+// R.MyDigi.Intro
+bot.dialog('MyDigiBillPayment', [
+    function (session) {
+        trackBotEvent(session, 'menu|MyDigi|BillPayment',1);
+
+        session.send("For Postpaid users, here is how you can make Bill Payment using MyDigi");
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.HeroCard(session)
+				.title("Step 1 of 3")
+				.text("At MyDigi app, click on Pay Bill")
+                .images([ builder.CardImage.create(session, imagedir + '/images/MyDigi-Bill-Payment-Page1.png') ])
+
+                ,new builder.HeroCard(session)
+				.title("Step 2 of 3")
+				.text("On this page, enter the amount you want to pay, email address and the press Pay Bill")
+                .images([ builder.CardImage.create(session, imagedir + '/images/MyDigi-Bill-Payment-Page234.png') ])
+				
+                ,new builder.HeroCard(session)
+				.title("Step 3 of 3")
+				.text("We will then bring you to payment page. Fill in payment details to complete the payment")
+                .images([ builder.CardImage.create(session, imagedir + '/images/MyDigi-Bill-Payment-Page5.png') ])
+				
+            ]);
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
+    }
+]).triggerAction({
+	// Match question with 2 words in any order: 	MyDigi + intro		MyDigi + Start 
+    matches: /^(bill)|(?=.*\bmydigi\b)(?=.*\bbill\b).*$|(?=.*\bpay\b)(?=.*\bill\b).*$/i
+});
+
+// R.MyDigi.Intro
+bot.dialog('MyDigiReloadOnline', [
+    function (session) {
+        trackBotEvent(session, 'menu|MyDigi|ReloadOnline',1);
+
+        session.send("For Prepaid users, here is how you can reload using MyDigi with your Credit Card, Debit card or online banking");
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.HeroCard(session)
+				.title("Step 1 of 4")
+				.text("At MyDigi app, click on Reload")
+                .images([ builder.CardImage.create(session, imagedir + '/images/MyDigi-Reload-Page1.png') ])
+
+                ,new builder.HeroCard(session)
+				.title("Step 2 of 4")
+				.text("Click on online, for reload with Credit Card, Debit Card or Online Banking")
+                .images([ builder.CardImage.create(session, imagedir + '/images/MyDigi-Reload-Page4.png') ])
+				
+                ,new builder.HeroCard(session)
+				.title("Step 3 of 4")
+				.text("Enter the reload amount, you email address and the press Reload")
+                .images([ builder.CardImage.create(session, imagedir + '/images/MyDigi-Reload-Page567.png') ])
+				
+                ,new builder.HeroCard(session)
+				.title("Step 4 of 4")
+				.text("We will then bring you to payment page. Fill in payment details to complete the reload")
+                .images([ builder.CardImage.create(session, imagedir + '/images/MyDigi-Bill-Payment-Page5.png') ])
+				
+            ]);
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
+    }
+]).triggerAction({
+	// Match question with 2 words in any order: 	MyDigi + intro		MyDigi + Start 
+    matches: /^(?=.*\breload\b)(?=.*\bonline\b).*$|(?=.*\breload\b)(?=.*\bcredit\b)(?=.*\bcard\b).*$|(?=.*\breload\b)(?=.*\batm\b).*$|(?=.*\breload\b)(?=.*\bbank\b).*$/i
+});
+
+// R.MyDigi.Intro
+bot.dialog('MyDigiReloadPin', [
+    function (session) {
+        trackBotEvent(session, 'menu|MyDigi|ReloadPin',1);
+
+        session.send("For Prepaid users, here is how you can reload using MyDigi with PIN or reload coupon");
+        var respCards = new builder.Message(session)
+            .attachmentLayout(builder.AttachmentLayout.carousel)
+            .attachments([
+                new builder.HeroCard(session)
+				.title("Step 1 of 3")
+				.text("At MyDigi app, click on Reload")
+                .images([ builder.CardImage.create(session, imagedir + '/images/MyDigi-Reload-Page1.png') ])
+
+                ,new builder.HeroCard(session)
+				.title("Step 2 of 3")
+				.text("Click on PIN")
+                .images([ builder.CardImage.create(session, imagedir + '/images/MyDigi-Reload-PIN-Page1.png') ])
+				
+                ,new builder.HeroCard(session)
+				.title("Step 3 of 3")
+				.text("Key in the 16 Digit PIN and press Reload")
+                .images([ builder.CardImage.create(session, imagedir + '/images/MyDigi-Reload-PIN-Page23.png') ])
+				
+            ]);
+		session.send(respCards);		
+		session.replaceDialog("getInfoFeedback");		
+    }
+]).triggerAction({
+	// Match question with 2 words in any order: 	MyDigi + intro		MyDigi + Start 
+    matches: /^(?=.*\breload\b)(?=.*\bpin\b).*$|(?=.*\breload\b)(?=.*\bcoupon\b).*$/i
+});
+
 
 //bot.dialog('NLP', [
 //// R - menu
@@ -1703,7 +1838,7 @@ bot.dialog('SmallTalk1', [
     function (session) {
         trackBotEvent(session, 'smalltalk',1);
 
-        session.send("Hi, I'm Yellow, Digi's virtual assistant");
+        session.send("Hi, I'm Yello, Digi's virtual assistant");
     }
 ]).triggerAction({
     matches: /(hi)|(hello)|(are you)|(name)|(call you)/i
@@ -1728,7 +1863,7 @@ bot.dialog('SmallTalk3', [
     matches: /(clever)|(bad)|(sucks)/i
 });
 
-bot.dialog('getFeedback', [
+bot.dialog('getBotFeedback', [
     function (session) {
         builder.Prompts.choice(session, emoji.emojify("We would appreciate your feedback. How would you rate our Virtual Assistant? \n(1)not able to help me, (5)very useful"), emoji.emojify('★|★★|★★★|★★★★|★★★★★'), { listStyle: builder.ListStyle.button });
     },
@@ -1758,6 +1893,44 @@ bot.dialog('getFeedback', [
     }
 ])
 
+bot.dialog('getInfoFeedback', [
+    function (session) {
+		
+		var respCards = new builder.Message(session)
+			.text("Is this information helpful for you?")
+			.suggestedActions(
+				builder.SuggestedActions.create(
+					session,[
+						builder.CardAction.imBack(session, "Yes", "✓"),
+						builder.CardAction.imBack(session, "No", "✗")
+					]
+				)
+			);
+        builder.Prompts.choice(session, respCards, "Yes|No", { maxRetries:MaxRetries_SingleMenu});
+	},
+    function(session, results) {
+		if(results.response==undefined){
+			session.replaceDialog('menu');			
+		} else {
+			switch (results.response.index) {
+				case 0:
+					trackBotEvent(session,'menu|OtherQuestions|AllAboutMyAccount|GetAccountNo|Yes Useful',1,0);
+					session.send("Thanks for your feedback. I'm glad we can help");
+					session.endDialog();
+					break;
+				case 1:
+					trackBotEvent(session,'menu|OtherQuestions|AllAboutMyAccount|GetAccountNo|Not Useful',1,0);
+					session.send("Thanks for your feedback. We will improve");
+					session.endDialog();
+					break;
+				default:
+					break;
+			}			
+			session.replaceDialog('menu');
+		}
+    }
+])
+
 bot.dialog('CheckMyAccount', [
     function (session) {
         var currentTime = Date.now();
@@ -1767,7 +1940,7 @@ bot.dialog('CheckMyAccount', [
         {
             session.send("Just let us verify your identity for a sec ");
 
-            session.beginDialog('validators:phonenumber');
+//            session.beginDialog('validators:phonenumber');
         } else {
             session.replaceDialog('PrepaidAccountOverview');
             return;
