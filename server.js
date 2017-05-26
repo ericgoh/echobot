@@ -2236,7 +2236,7 @@ bot.dialog('CatchAll', [
 			session.send("Let's get back to our chat on Digi");
 //		});
 
-		request.end();
+//		request.end();
 	}
 ]).triggerAction({
     matches: /^.*$/i
