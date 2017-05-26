@@ -18,8 +18,8 @@ var emoji = require('node-emoji');
 
 
 
-var apiai = require('apiai'); 
-var apiai_app = apiai(process.env.APIAI_CLIENT_ACCESS_TOKEN);
+//var apiai = require('apiai'); 
+//var apiai_app = apiai(process.env.APIAI_CLIENT_ACCESS_TOKEN);
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -2211,30 +2211,30 @@ bot.dialog('CatchAll', [
     function (session) {
 
 //console.log("text: "+session.message.text + apiai_app);
-		var request = apiai_app.textRequest(session.message.text, {
-			sessionId: `${math.randomInt(100000,999999)}`
-		});
-
-		request.on('response', function(response) {
-			if(response.result.action==undefined){
-				session.send("Let's get back to our chat on Digi");
-			} else {		// We have response from API.AI
-				console.log("API.AI [" +response.result.resolvedQuery + '][' + response.result.action + '][' + response.result.score + ']['  + response.result.fulfillment.speech + ']');
-	//			console.log('API.AI response text:'+ response.result.fulfillment.speech);
-	//			console.log('API.AI response text:'+ response.result.fulfillment.messages[0].speech);
-	//			console.log('API.AI response:'+ JSON.stringify(response.result));
-				if(response.result.fulfillment.speech.length>0) {
-					session.send(response.result.fulfillment.speech);				
-				} else {
-					session.send("Let's get back to our chat on Digi");
-				}
-			}
-		});
-
-		request.on('error', function(error) {
-			console.log('API.AI error:'+error);
+//		var request = apiai_app.textRequest(session.message.text, {
+//			sessionId: `${math.randomInt(100000,999999)}`
+//		});
+//
+//		request.on('response', function(response) {
+//			if(response.result.action==undefined){
+//				session.send("Let's get back to our chat on Digi");
+//			} else {		// We have response from API.AI
+//				console.log("API.AI [" +response.result.resolvedQuery + '][' + response.result.action + '][' + response.result.score + ']['  + response.result.fulfillment.speech + ']');
+//	//			console.log('API.AI response text:'+ response.result.fulfillment.speech);
+//	//			console.log('API.AI response text:'+ response.result.fulfillment.messages[0].speech);
+//	//			console.log('API.AI response:'+ JSON.stringify(response.result));
+//				if(response.result.fulfillment.speech.length>0) {
+//					session.send(response.result.fulfillment.speech);				
+//				} else {
+//					session.send("Let's get back to our chat on Digi");
+//				}
+//			}
+//		});
+//
+//		request.on('error', function(error) {
+//			console.log('API.AI error:'+error);
 			session.send("Let's get back to our chat on Digi");
-		});
+//		});
 
 		request.end();
 	}
