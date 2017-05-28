@@ -18,8 +18,8 @@ var emoji = require('node-emoji');
 
 
 
-//var apiai = require('apiai'); 
-//var apiai_app = apiai(process.env.APIAI_CLIENT_ACCESS_TOKEN);
+var apiai = require('apiai'); 
+var apiai_app = apiai(process.env.APIAI_CLIENT_ACCESS_TOKEN);
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -2236,7 +2236,7 @@ bot.dialog('CatchAll', [
 			session.send("Let's get back to our chat on Digi");
 		});
 
-		request.end();
+//		request.end();
 	}
 ]).triggerAction({
     matches: /^.*$/i
