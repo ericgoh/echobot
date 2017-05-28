@@ -2237,7 +2237,7 @@ bot.dialog('CatchAll', [
 
 			request.on('error', function(error) {
 				console.log('API.AI error:'+error);
-				apiai_error_timeout = Date.now() + 24*60*60*1000;	// Do not use NLP for the next 1 day
+				apiai_error_timeout = Date.now() + 10*1000;	// Do not use NLP for the next 1 day
 				session.send("Let's get back to our chat on Digi");
 			});
 
