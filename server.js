@@ -20,7 +20,7 @@ var emoji = require('node-emoji');
 
 var apiai = require('apiai'); 
 var apiai_app = apiai(process.env.APIAI_CLIENT_ACCESS_TOKEN);
-
+var apiai_error_timeout = 0;
 
 ////////////////////////////////////////////////////////////////////////////
 // Global Variables
@@ -2132,7 +2132,7 @@ function GetSmsAuthToken(){
                 if(ApiGwAuth.status == 'approved'){
                     var ApiGwAuth = JSON.parse(body);
                     ApiGwAuthToken = ApiGwAuth.accessToken;
-                    ApiGwAuthTokenExpiry = Date.now() + 23*50*60*1000;   // Expire in 24 hours. Renew Token 10 mins before expiry 
+                    ApiGwAuthTokenExpiry = Date.now() + (24*60-20)*60*1000;   // Expire in 24 hours. Renew Token 10 mins before expiry 
 
                     console.log('Token = ' + ApiGwAuthToken + ' expiry in ' + ApiGwAuthTokenExpiry);            
                 }                
@@ -2159,7 +2159,7 @@ function GetSmsAuthToken2(){
                 if(ApiGwSmsAuth.status == 'approved'){
                     var ApiGwAuth = JSON.parse(body);
                     ApiGwAuthToken = ApiGwSmsAuth.accessToken;
-                    ApiGwAuthTokenExpiry = Date.now() + 23*50*60*1000;   // Expire in 24 hours. Renew Token 10 mins before expiry 
+                    ApiGwAuthTokenExpiry = Date.now() + (24*60-20)*60*1000;   // Expire in 24 hours. Renew Token 10 mins before expiry 
 
                     console.log('Token = ' + ApiGwAuthToken + ' expiry in ' + ApiGwAuthTokenExpiry);            
                 }                
@@ -2210,33 +2210,43 @@ function findStackAction(routes, name) {
 bot.dialog('CatchAll', [
     function (session) {
 
-//		console.log("text: "+session.message.text + apiai_app);
-		var request = apiai_app.textRequest(session.message.text, {
-			sessionId: `${math.randomInt(100000,999999)}`
-		});
+		console.log("CatchAll: "+session.message.text + ']['+apiai_app+']');
 
-		request.on('response', function(response) {
-			if(response.result.action==undefined){
-				session.send("Let's get back to our chat on Digi");
-			} else {		// We have response from API.AI
-				console.log("API.AI [" +response.result.resolvedQuery + '][' + response.result.action + '][' + response.result.score + ']['  + response.result.fulfillment.speech + ']');
-//				console.log('API.AI response text:'+ response.result.fulfillment.speech);
-//				console.log('API.AI response text:'+ response.result.fulfillment.messages[0].speech);
-//				console.log('API.AI response:'+ JSON.stringify(response.result));
-				if(response.result.fulfillment.speech.length>0) {
-					session.send(response.result.fulfillment.speech);				
-				} else {
+		if (apiai_error_timeout < Date.now()) {
+			apiai_error_timeout = 0;	// Reset timeout if prevously set to some value
+
+			var request = apiai_app.textRequest(session.message.text, {
+				sessionId: `${math.randomInt(100000,999999)}`
+			});
+
+			request.on('response', function(response) {
+				if(response.result.action==undefined){
 					session.send("Let's get back to our chat on Digi");
+				} else {		// We have response from API.AI
+					console.log("API.AI [" +response.result.resolvedQuery + '][' + response.result.action + '][' + response.result.score + ']['  + response.result.fulfillment.speech + ']');
+		//			console.log('API.AI response text:'+ response.result.fulfillment.speech);
+		//			console.log('API.AI response text:'+ response.result.fulfillment.messages[0].speech);
+		//			console.log('API.AI response:'+ JSON.stringify(response.result));
+					if(response.result.fulfillment.speech.length>0) {
+						session.send(response.result.fulfillment.speech);				
+					} else {
+						session.send("Let's get back to our chat on Digi");
+					}
 				}
-			}
-		});
+			});
 
-		request.on('error', function(error) {
-			console.log('API.AI error:'+error);
+			request.on('error', function(error) {
+				console.log('API.AI error:'+error);
+				apiai_error_timeout = Date.now() + 24*60*60*1000;	// Do not use NLP for the next 1 day
+				session.send("Let's get back to our chat on Digi");
+			});
+
+			request.end();
+		} else {
+			// there were error in the last 1 day. Do not query API AI for the next 1 day
 			session.send("Let's get back to our chat on Digi");
-		});
+		}
 
-//		request.end();
 	}
 ]).triggerAction({
     matches: /^.*$/i
